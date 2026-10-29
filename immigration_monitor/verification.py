@@ -34,6 +34,6 @@ def verify_sources(output):
         'Live checks are separate from deterministic fixture tests. A blocked result is not a passed test. No replacement URLs were invented. Discovered BC guides require approval in Sources & health before monitoring.','']
     for item in results:
         md.extend(['## '+item['title'],item['url'],'', '- Result: '+item['result'],'- Checked UTC: '+item['checked_utc'],'- Extraction method: '+item['method'],
-            '- Detail: '+item.get('detail','Valid extracted content captured'),'- Redirect evidence: '+json.dumps(item.get('response_metadata',{}).get('redirects',item['redirects'])),'- Limitations: '+' '.join(item['limitations']),''])
+            '- Detail: '+item.get('detail','Valid extracted content captured'),'- Redirect evidence: '+json.dumps(item.get('response_metadata',{}).get('redirects',item['redirects'])),'- Limitations: '+(' '.join(item['limitations']) or 'None reported by this extractor.'),''])
     output.with_suffix('.md').write_text('\n'.join(md))
     return all(item['result']=='fetch and extraction passed' for item in results)

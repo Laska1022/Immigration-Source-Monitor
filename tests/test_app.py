@@ -188,6 +188,11 @@ def test_starter_registry_is_idempotent_and_unverified(store):
     sources=store.rows('SELECT * FROM sources')
     assert len(sources)==9
     assert all(s['baseline_id'] is None and s['last_success'] is None and s['health']=='never checked' for s in sources)
+    configured=[s for s in sources if s['title'] in ('BC PNP news','BC PNP documents')]
+    assert len(configured)==2 and all(s['scope']=='main content' and s['selector']=='main .col-lg-9' for s in configured)
+    with store.connect() as db:db.execute("UPDATE sources SET selector='#user-choice' WHERE id=?",(configured[0]['id'],))
+    store.seed()
+    assert store.one('SELECT selector FROM sources WHERE id=?',(configured[0]['id'],))['selector']=='#user-choice'
 
 
 def test_live_report_command_does_not_pass_blocked_sources(tmp_path,monkeypatch):

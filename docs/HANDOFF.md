@@ -1,50 +1,40 @@
 # Handoff
 
-**Status: READY** — the publishing agent verifies the remote SHA after pushing this checkpoint. READY means published continuation, not full live-release acceptance.
+**Status: READY** — a published continuation checkpoint, not completed release acceptance. Verify publication with the commands below.
 
-Continuation branch: **`codex/immigration-monitor`**. Checkpoint identity: the latest commit containing this file (`git log -1`). No PR is required/created; no stable-branch merge authorized. The repository was originally empty, so GitHub may use this development branch as its initial default.
+Continuation branch: **codex/immigration-monitor**. The latest commit containing this file identifies the checkpoint. Started from verified remote `f1db6b2453f7da722a1a3c94708ce9e2356f652a`. No stable-branch merge or cloud configuration publication is part of this checkpoint.
 
 ## Current milestone
 
-Local application implemented; **P06 live-source validation is blocked**. P07's docs/local validation are complete; final release acceptance awaits P06 and Windows verification. Continue this implementation rather than replacing the stack or repeating completed fixture work.
+The network blocker is resolved: the user published an environment with unrestricted public access, and current runtime observations report it enforced. **P06 is in progress: eight of nine starter pages now pass live fetching/extraction.** Express Entry remains uncertain pending integration of the JSON endpoint referenced by its official page. P07 still requires Windows and final live acceptance.
 
-Implemented: Python/Flask/Waitress loopback UI; SQLite immutable versions and retained failed captures; source CRUD/grouping/pause/soft removal; approved exact-host registry; selected sections/listings/independent PDFs; approval-gated candidates and bounded one-hop article capture; diff/review/history/export; six-hour independent checker and locks/catch-up; persistent first-unhealthy/recovery events; opt-in SMTP queue with explicit uncertain outcomes; timezone daily digest/coverage; backup/validated restore; Windows setup/launcher/scheduler/DPAPI password scripts; complete operator/security/limitation docs.
+This continuation fixes issues exposed by real HTML: quadratic table-header scans on IRCC's updates index; a false dynamic-content warning from Canada.ca's page-feedback widget; the IEC public page's changed expected heading; and BC news/documents configurations that previously monitored breadcrumbs instead of inline content. New seeds retain CSS selectors. Existing saved sources are preserved by init; apply the three adjustments in **LIVE_SOURCE_NOTES**.
 
-Important code: `db.py` schema; `fetch.py` network controls; `extract.py` bounded parsing (`html-2/pdf-1/feed-1`); `monitor.py` observation state machine; `notifications.py` digest/outbox; `backup.py` checked restore; `web.py` browser routes; `__main__.py` CLI. `starter_sources.json` contains exactly the nine requested URLs. No guide URLs were invented.
+Parser version is `html-3/pdf-1/feed-1`. Parser/config changes create an internal rebaseline on the next valid capture; failed checks retain the last valid baseline. Unknown AJAX/JSON placeholders remain uncertain. No Express Entry adapter or automatically approved guide was added.
 
 ## Verified results
 
-Latest resumption (2026-10-29): remote lookup/fetch confirmed published `fdddae33273798442d8187d8d41e3239711fd7b7` before work. Fresh hash-locked install, `pip check`, all 55 tests, and six-screen HTTP smoke passed; the saved install script was exercised successfully. Repeated initialization at `/workspace/ism-runtime` retained exactly nine sources, and the initialized UI returned expected inbox/source HTTP responses. At 08:57:26 UTC both official-host robots probes still returned proxy CONNECT 403. No new live content was obtained, no dynamic endpoint was guessed, and P06 remains blocked. This checkpoint updates setup/validation evidence only; it does not complete P06/P07. Full details are in VALIDATION.
-
-Current cloud paths supersede the earlier environment notes below: Python is `/workspace/Immigration-Source-Monitor/.venv/bin/python`; runtime data is `/workspace/ism-runtime`. The current draft saves complete tested installation and startup instructions plus the two official-host network additions. The save confirmed publication is required; it has not applied the network policy or verified restoration in a new task.
-
-- `python -m pytest -q`: **55 passed**, no failures/skips (Linux Python 3.12.14).
-- Hash-locked pip install and `pip check`: passed. Saved environment install script was exercised successfully (then-current 53 tests); the final expanded suite is 55 passing tests.
-- `python scripts/smoke-local.py`: passed fresh fictional demo, six actual HTTP screens, security headers, attachment download, own-server cleanup.
-- Fictional CLI demo covers baseline → wording edit → failed check → recovery → browser review → digest. `init` is idempotent (nine unverified sources, no duplicate baselines).
-- Backup round-trip and unsafe schema/path/integrity tests passed; compileall and whitespace checks passed.
-- **Live:** all nine blocked. `docs/source-verification.json` / `.md` preserve each attempt and two diagnostic probes at **2026-10-29 07:48:32 UTC**, both returning managed-proxy CONNECT **403 Forbidden**. No official page/robots body, redirects, current guides, or dynamic data was verified.
-- **Not run:** Windows execution; actual SMTP delivery. Fake-sender tests are not real-email evidence. No graphical browser test was performed.
-
-See `docs/VALIDATION.md` for evidence and `docs/LIMITATIONS.md` for precise gaps.
+- Restored Python 3.12.14 virtualenv: pip check passed; baseline before changes was 55 passing tests.
+- Current suite: **59 passed, 0 failed/skipped**. Added coverage for 1,500-row bounded extraction, feedback furniture versus missing policy data, BC inline content/guide links/missing selectors, and preserving seeded selectors and user edits.
+- `python scripts/smoke-local.py`: passed fictional demo, six actual HTTP screens, content/CSP, attachment download, and cleanup.
+- Live report completed **2026-10-29T09:50:44+00:00**: **8 fetch/extraction passes, 1 extraction uncertain** (Express Entry); command exited 1 as required for incomplete coverage. All nine official pages were reached. See source-verification.json and .md.
+- Offline integration replay of observed public HTML: eight baselines, then eight unchanged captures; Express Entry stays uncertain; both requested BC guides remain pending with no child sources added. This proves integration, not a second live request or historical policy change.
+- Observed Express Entry JSON endpoint: robots-checked HTTP 200, top-level classes/rounds, 454 records. Round coverage remains unverified until the adapter records and validates the data.
+- Windows setup/launcher/scheduler/DPAPI, real SMTP delivery, and graphical browser testing remain **unrun**.
 
 ## Exact next steps, priority order
 
-1. Resume safely: inspect status/remotes, fetch, verify this is the latest remote `codex/immigration-monitor` tip, read AGENTS/PLAN/spec, install locked dependencies, run pytest. Preserve unexpected changes; never force-push.
-2. Enable the requested official domains through the supported cloud environment settings. A draft adds only `www.canada.ca` and `www.welcomebc.ca` to custom destinations; it is **saved, not applied/published**. Review/save/publish, inspect current `environment_status`, then retry:
-   `ISM_TRUSTED_PROXY=1 python -m immigration_monitor verify-sources --output docs/source-verification.json`
-   Only use that flag for the reviewed managed proxy. The command now exits 1 for any blocked/failed source. Do not bypass access controls or infer withdrawal/no change.
-3. Inspect live official page structure and public network/data requests. Implement dynamic handling only for observed verified official endpoints (or safely bounded rendering); no dynamic JSON adapter/browser renderer exists yet. Express Entry's unpopulated table and other empty placeholders intentionally yield uncertainty. Confirm main-content/list selectors and expected markers for all nine pages.
-4. From the actual BC documents page discover Skills Immigration Program Guide and Application Guide. Present candidates in the app and require user approval before monitoring them. Verify same-URL replacements and changed download links against actual sources; fixture coverage already passes.
-5. On Windows run Setup.cmd, Launch.cmd, explicit scheduler install/remove and DPAPI credential setup. Verify browser-closed checking, sleep/offline catch-up, restore, and task results. With optional user-configured SMTP, verify a real readable mobile digest and failure handling. Do not claim unrun checks passed.
-6. Update PLAN/HANDOFF/VALIDATION/limitations and publish another tested checkpoint after each meaningful unit. Final live acceptance remains pending until supported by evidence.
+1. Inspect status/remotes, fetch the continuation branch, compare HEAD with the remote, and read AGENTS/PLAN/spec plus LIVE_SOURCE_NOTES. Preserve unrelated work; never force-push.
+2. Implement Express Entry page-plus-data capture using the verified endpoint `https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json`. LIVE_SOURCE_NOTES records the actual page reference/schema. Validate the reference, required fields and every fetch; preserve exact HTML/JSON with URLs, observation times and hashes. Failed/malformed/changed endpoints must retain the baseline. Test changed round dates/counts/scores, historical revisions and distribution data. Do not just suppress empty-placeholder checks or silently replace the page with an unrecorded API response.
+3. Rerun `ISM_TRUSTED_PROXY=1 .venv/bin/python -m immigration_monitor verify-sources --output docs/source-verification.json` through the reviewed managed proxy. Any uncertainty must keep its exit status nonzero.
+4. Have the user review and approve the discovered Skills Immigration Program Guide and Application Guide candidates before monitoring. Exact links are in LIVE_SOURCE_NOTES and the JSON report. PDF contents, redirects and extraction quality are unverified. Candidate discovery also finds other guides/index links; identify the exact requested URLs.
+5. On Windows, apply the three existing-source adjustments if needed, then run Setup.cmd, Launch.cmd and the HTTP smoke. Explicitly test scheduler install/remove, browser-closed checks, sleep/offline catch-up, DPAPI and backup/restore. Optional SMTP acceptance follows secure user configuration.
+6. Update PLAN/HANDOFF/VALIDATION and publish tested code/docs checkpoints. Check remote advancement before push and verify afterward. Do not mark P06/P07 complete from fixture tests or one successful page capture alone.
 
-## Decisions, setup, publication
+## Environment and publication
 
-- Stack: Python 3.11+, Flask, Waitress, SQLite, BeautifulSoup, pypdf, filelock. No cloud runtime, AI, Docker, paid services, or external DB requirement.
-- `python -m pip install --require-hashes -r requirements.txt`; `python -m pytest -q`; `python -m immigration_monitor init/serve/check`. Read README for Windows paths and commands.
-- Runtime data is outside checkout. Default Windows path: `%LOCALAPPDATA%\ImmigrationSourceMonitor`. `ISM_DATA_DIR` may override. Current-task `/workspace/ism-venv`, `/workspace/ism-runtime`, and `/tmp` demos are **not cross-account project memory**. Recreate them from committed instructions. The cloud draft saves complete `install_script` and `start_skill`; neither save executes/applies/publishes automatically. A new-task restore has not been tested.
-- Every valid full observation is retained; 304 needs a corresponding baseline and daily full validation. Failures retain the old valid baseline. Parser/config changes explicitly rebaseline; A→B→A remains evidence. PDFs require visual table/layout review; no OCR. Failed captures are never rendered as a substantive deletion comparison.
-- Default direct fetches pin validated public DNS addresses and verify TLS hostname. Explicit trusted proxy mode delegates resolution/public-address enforcement to that reviewed proxy because local DNS is unavailable here. The proxy denial must be fixed in settings, not bypassed.
-- SQLite stores raw evidence blobs for coherent backups; reviews are separate. SMTP cannot ensure exactly-once delivery: interrupted sends become uncertain and require mailbox reconciliation, with no automatic resend. Restores disable email/hold unsent messages; credentials and OS task registration are separate. Restore size limit is 512 MiB extracted DB, exact schema compatibility required.
-- No source code changes are left intentionally unpublished at this checkpoint. Verify `git rev-parse HEAD` equals `git ls-remote origin refs/heads/codex/immigration-monitor`. Previous published milestone: `670a9f18bf28948cad5a90aee0451d719f3096da`. If publication fails, mark NEEDS_PUBLISHING and provide a Git bundle; another account cannot recover local-only files.
+Use the existing checkout at /workspace/Immigration-Source-Monitor, with .venv/bin/python and hash-locked requirements.txt. No worktree is needed. Runtime data stays outside the checkout, e.g. /workspace/ism-runtime; acceptance runs use separate external directories. Never commit credentials, session keys, databases or private notes.
+
+The user published the cloud environment and asked that its settings not be changed or republished. No configuration writes were made here. Saved startup text may mention the earlier network blocker and 55-test baseline; current runtime evidence and this handoff supersede those historical statements. Fetch and inspect remote changes when restoring the published filesystem snapshot; it need not include this later Git checkpoint.
+
+Verify publication with `git rev-parse HEAD` and `git ls-remote origin refs/heads/codex/immigration-monitor`. If publication fails, mark NEEDS_PUBLISHING and provide a Git bundle/manual recovery path. Git publication and cloud publication are separate. The actual long-term host remains the user's Windows computer with opt-in scheduling.

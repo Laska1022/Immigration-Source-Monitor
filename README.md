@@ -2,7 +2,7 @@
 
 A local evidence desk for official Canadian immigration sources. It records **what was observed**, keeps previous versions, and makes failed checks visible. It does not give legal advice, decide eligibility, or store client records.
 
-**Current delivery:** working local application with deterministic tests and a fictional demo. Live starter-source verification is blocked in the development environment by proxy access restrictions. Windows scripts and real SMTP delivery are supplied but have not been executed on Windows or against an email provider. See [validation](docs/VALIDATION.md), [live verification](docs/source-verification.md), and [limitations](docs/LIMITATIONS.md). Do not assume the starter watchlist currently has verified live coverage.
+**Current delivery:** working local application with 59 deterministic tests and a fictional demo. Live fetching/extraction passed for eight of the nine starter sources on 2026-10-29; Express Entry rounds remain uncertain until the observed official JSON data is integrated. Windows scripts and real SMTP delivery have not been executed on Windows or against an email provider. See [validation](docs/VALIDATION.md), [live verification](docs/source-verification.md), and [limitations](docs/LIMITATIONS.md). Existing installations need the three source-setting adjustments in [live source notes](docs/LIVE_SOURCE_NOTES.md); setup preserves saved source edits.
 
 ## Windows quick start
 

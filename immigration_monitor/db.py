@@ -118,8 +118,8 @@ class Store:
         seeds = json.loads(Path(__file__).with_name('starter_sources.json').read_text())
         with self.connect() as db:
             for s in seeds:
-                db.execute('INSERT OR IGNORE INTO sources(title,url,agency,tags,source_type,scope,expected,next_due) VALUES (?,?,?,?,?,?,?,?)',
-                    (s['title'],s['url'],s['agency'],s['tags'],s['source_type'],s['scope'],s['expected'],now()))
+                db.execute('INSERT OR IGNORE INTO sources(title,url,agency,tags,source_type,scope,selector,expected,next_due) VALUES (?,?,?,?,?,?,?,?,?)',
+                    (s['title'],s['url'],s['agency'],s['tags'],s['source_type'],s['scope'],s.get('selector',''),s['expected'],now()))
 
 
 def digest_hash(data):

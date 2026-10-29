@@ -171,6 +171,45 @@ def test_long_dynamic_shell_rejected():
     with pytest.raises(CheckError,match='Dynamic'):extract(shell,URL,{})
 
 
+def test_feedback_furniture_does_not_mask_missing_policy_data():
+    widget='<div data-ajax-replace="/etc/designs/canada/wet-boew/assets/feedback/page-feedback-en.html"></div>'
+    body=page(extra=widget+'<nav><div data-ajax-replace="/menu.html"></div></nav>')
+    assert extract(body,URL,{}).text==extract(page(),URL,{}).text
+    for missing in ['<div data-ajax-replace="/policy.html"></div>',
+                    '<p>Invitations: <span data-json-replace="#rounds/0/invitations"></span></p>']:
+        with pytest.raises(CheckError,match='Dynamic'):
+            extract(page(extra=widget+missing),URL,{})
+    with pytest.raises(CheckError,match='Dynamic'):
+        extract(page(extra=widget),'https://other.example/guidance',{})
+
+
+def test_large_announcement_table_fits_existing_extraction_limits():
+    rows=''.join(f'<tr><td>Fictional category</td><td><a href="/announcement-{i}">Fictional update {i}</a></td><td>2026-10-29</td></tr>' for i in range(1500))
+    body=page(extra='<table><thead><tr><th>Category</th><th>Title</th><th>Date published</th></tr></thead><tbody>'+rows+'</tbody></table>')
+    result=bounded_extract(body,URL,{'scope':'listing entries'})
+    assert len(result.entries)==1500
+    assert all(e['publication']=='2026-10-29' for e in result.entries)
+    assert 'Fictional update 1499' in result.text
+
+
+@pytest.mark.parametrize('index,title',[(5,'News'),(7,'Documents')])
+def test_bc_starter_captures_inline_content_and_guide_links(index,title):
+    from pathlib import Path
+    seeds=json.loads(Path('immigration_monitor/starter_sources.json').read_text())
+    config=seeds[index]
+    body=f'''<main><ul class="breadcrumb"><li><a href="/home">Home</a></li></ul>
+    <div class="col-lg-9"><h1>{title}</h1><p>Fictional notice about a change to the program. Applicants must provide supporting evidence.</p>
+    <p><a href="/fictional-program-guide">Skills Immigration Program Guide</a></p></div></main>'''.encode()
+    result=extract(body,config['url'],config)
+    assert 'Fictional notice' in result.text and 'must provide' in result.text
+    assert 'Home' not in result.text
+    assert result.links==[{'title':'Skills Immigration Program Guide','url':'https://www.welcomebc.ca/fictional-program-guide'}]
+    changed=extract(body.replace(b'must provide',b'must not provide'),config['url'],config)
+    assert changed.text!=result.text
+    with pytest.raises(CheckError,match='Selected section'):
+        extract(body.replace(b'col-lg-9',b'layout-changed'),config['url'],config)
+
+
 def test_retry_after_persisted_across_restart(store,source):
     from immigration_monitor.fetch import retry_after
     from immigration_monitor.monitor import check_one

@@ -4,7 +4,7 @@ Environment: Linux, Python 3.12.14. Tests use isolated temporary SQLite database
 
 | Check | Actual result |
 |---|---|
-| `python -m pytest -q` | **55 passed**, 0 failed, 0 skipped; final suite completed |
+| `python -m pytest -q` | **59 passed**, 0 failed, 0 skipped; current suite completed |
 | Hash-locked dependency install | Passed using `pip install --no-cache-dir --require-hashes -r requirements.txt` |
 | `python -m pip check` | Passed: no broken requirements |
 | Saved cloud install script | Re-executed successfully on resumption: hash-locked install, dependency check, all 55 tests, six-screen HTTP smoke, and external runtime initialization |
@@ -14,17 +14,23 @@ Environment: Linux, Python 3.12.14. Tests use isolated temporary SQLite database
 | `python -m immigration_monitor ... demo` | Passed: baseline → wording change → failed check → recovery → reviewed alert via browser route → digest; fictional source paused |
 | Startup `init` repeatability | Passed: two runs leave nine unverified starter sources, no duplicates or fabricated evidence |
 | Backup/restore | Passed: sources, raw/extracted versions, hashes, attempts, annotations, settings preserved; unsafe archives/schema rejected; credentials excluded; email disabled and outbox held after restore |
-| Optional live source verification | **9 blocked, 0 verified live successes**. CONNECT 403 Forbidden confirmed for the two official hosts; no government page/robots content obtained |
+| Optional live source verification | **8 fetch/extraction passes, 1 extraction uncertain** (Express Entry); all nine pages reached; live CLI exited 1 for incomplete coverage |
 | Windows setup/launcher/scheduler/DPAPI execution | **Not run** — no Windows host available |
 | Real SMTP delivery | **Not run** — optional provider/credentials not configured; fake-sender queue tests passed |
 
+## Current live validation — 2026-10-29 09:50 UTC
+
+The user published the cloud environment with unrestricted public access. Current observations report enforced policy, and the replacement instance restored the virtualenv successfully. No environment settings were changed here. Live verification reached all nine sources, with eight fetch/extraction passes and Express Entry uncertain. The verified fixes and three existing-source adjustments are documented in [LIVE_SOURCE_NOTES](LIVE_SOURCE_NOTES.md).
+
+The 1,375-row IRCC table now extracts in about two seconds within unchanged limits; four added regression cases bring pytest to 59 passing tests. The six-screen HTTP smoke passes. An offline application replay of captured public HTML created eight baselines then eight unchanged results; Express Entry stayed uncertain, and both requested BC guides remained pending without child sources. This replay is distinct from the live report. The official Express Entry JSON endpoint returned HTTP 200 with 454 rounds, but no adapter exists yet. Guide PDFs, Windows execution and SMTP remain unverified.
+
 ## Deterministic acceptance coverage
 
-### Cloud resumption — 2026-10-29 08:57 UTC
+### Historical cloud resumption — 2026-10-29 08:57 UTC (superseded above)
 
 Started from published commit `fdddae33273798442d8187d8d41e3239711fd7b7`; remote lookup and fetch confirmed the continuation branch matched. A fresh Python 3.12.14 environment installed all locked dependencies with hashes and passed `pip check`, 55 tests (0 failed/skipped), and the existing six-screen HTTP smoke. The reusable installation script was then exercised successfully. Two `init` calls using `/workspace/ism-runtime` left exactly nine sources. A separately started UI on loopback port 8765 returned HTTP 200 and expected inbox/source content. Runtime data and session keys remain outside Git.
 
-At 08:57:26 UTC, independent robots HEAD probes to both official hosts received managed-proxy CONNECT 403 Forbidden. These are network prerequisite checks, not new nine-source verification or evidence of site robots restrictions. Current enforced policy excludes both hosts. Saved draft fields: complete `install_script`, complete `start_skill`, and custom network domains `www.canada.ca` and `www.welcomebc.ca` (package-manager presets preserved). The save confirmed `requires_publish: true`; runtime application and publication remain outstanding. P06 cannot proceed until access is applied. No application code, tests, dependency declarations, or lockfiles were changed during setup. No new-task restore was verified.
+At 08:57:26 UTC, independent robots HEAD probes to both official hosts received managed-proxy CONNECT 403 Forbidden. These are network prerequisite checks, not new nine-source verification or evidence of site robots restrictions. At that time, enforced policy excluded both hosts. Saved draft fields: complete `install_script`, complete `start_skill`, and custom network domains `www.canada.ca` and `www.welcomebc.ca` (package-manager presets preserved). The save confirmed `requires_publish: true`; runtime application and publication remain outstanding. At that time P06 could not proceed until access was applied. No application code, tests, dependency declarations, or lockfiles were changed during setup. No new-task restore was verified.
 
 ### Existing acceptance suite
 
@@ -34,6 +40,6 @@ The local HTTP smoke is deliberately separate from pytest because sandboxed runn
 
 ## Interpretation of readiness
 
-The local application and independent checker are implemented and tested against deterministic evidence. The original **live Windows acceptance goal is not fully verified**: current official-source extraction, dynamic adapters, BC guide discovery/approval, and Windows execution remain pending. No mocked success is counted as live-source coverage. See [LIMITATIONS](LIMITATIONS.md) and [source verification](source-verification.md).
+The local application and independent checker are implemented and tested against deterministic evidence. The original **live Windows acceptance goal is not fully verified**: Express Entry data integration, approved BC guide PDF verification, and Windows execution remain pending. No mocked success is counted as live-source coverage. See [LIMITATIONS](LIMITATIONS.md) and [source verification](source-verification.md).
 
-Reusable cloud `install_script` and `start_skill`, plus the two-host network draft, were saved. Saving is not runtime application or environment publication; no fresh cloud task restoration has been tested. The app's actual long-term host is the user's local computer, with explicit scheduling, not this development task.
+Reusable cloud `install_script` and `start_skill` were previously saved. The user has now published the environment; the replacement instance restored the virtualenv and passed dependency checks/tests. This later Git checkpoint is not assumed to be in that earlier filesystem snapshot. No further environment settings were edited or published by the agent. The app's actual long-term host is the user's local computer, with explicit scheduling, not this development task.

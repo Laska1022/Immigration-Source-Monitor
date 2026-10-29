@@ -14,7 +14,7 @@ from pypdf import PdfReader
 from .db import digest_hash
 from .fetch import CheckError, MAX_BYTES, canonical
 
-PARSER_VERSION='html-2/pdf-1/feed-1'
+PARSER_VERSION='html-3/pdf-1/feed-1'
 EFFECTIVE_UNKNOWN='Effective date not established from the monitored content.'
 
 
@@ -67,21 +67,33 @@ def html_extract(raw,url,source):
         if source.get('scope')=='selected section': raise CheckError('Selected section requires a CSS selector','extraction uncertain')
         root=soup.find('main') or soup.find(attrs={'role':'main'}) or soup.find('article')
         if not root: raise CheckError('No reliable main/article content found; configure a section selector','extraction uncertain')
-    # Data placeholders can coexist with long static guidance. Reject those too.
-    for placeholder in root.select('[data-ajax-replace],[data-ajax-append],[data-json],tbody,#app,#root'):
-        if len(clean(placeholder.get_text(' ',strip=True)))<30:
-            raise CheckError('Dynamic data placeholder has no verified content; inspect the official public data request','extraction uncertain')
-    if 'express-entry/rounds-invitations' in url:
-        populated=any(len(row.find_all('td'))>=3 and re.search(r'\d',row.get_text()) for row in root.select('tbody tr'))
-        if not populated:
-            raise CheckError('Express Entry rounds data has not been verified; static surrounding guidance is not round coverage','extraction uncertain')
+    # Remove known furniture before checking for missing substantive data.
     for node in root.select('script,style,noscript,nav,footer,form,iframe,object,embed,svg,#wb-dtmd,.date-modified,.cookie-banner,[role="navigation"]'):
         node.decompose()
+    # Observed Canada.ca feedback fragment is page furniture, not policy data.
+    if urlsplit(url).hostname=='www.canada.ca':
+        for node in root.select('[data-ajax-replace="/etc/designs/canada/wet-boew/assets/feedback/page-feedback-en.html"]'):
+            node.decompose()
     for selector in source.get('ignore_selectors','').splitlines():
         if selector.strip():
             try:
                 for node in root.select(selector.strip()): node.decompose()
             except Exception as exc: raise CheckError('Invalid noise selector','extraction uncertain') from exc
+    # Data placeholders can coexist with long static guidance. Reject those too.
+    for placeholder in root.select('[data-ajax-replace],[data-ajax-append],[data-json],tbody,#app,#root'):
+        if len(clean(placeholder.get_text(' ',strip=True)))<30:
+            raise CheckError('Dynamic data placeholder has no verified content; inspect the official public data request','extraction uncertain')
+    for placeholder in root.select('[data-json-replace],[data-json-append]'):
+        if not clean(placeholder.get_text(' ',strip=True)):
+            raise CheckError('Dynamic JSON field has no verified content; inspect the official public data request','extraction uncertain')
+    if 'express-entry/rounds-invitations' in url:
+        populated=any(len(row.find_all('td'))>=3 and re.search(r'\d',row.get_text()) for row in root.select('tbody tr'))
+        if not populated:
+            raise CheckError('Express Entry rounds data has not been verified; static surrounding guidance is not round coverage','extraction uncertain')
+    # The updates index contains over 1,000 rows. Scan each table's headers once,
+    # rather than traversing the whole table again for every announcement link.
+    table_headers={id(table):[clean(th.get_text()).casefold() for th in table.select('thead th')]
+                   for table in root.find_all('table')}
     links=[]; entries=[]; seen=set()
     for a in root.find_all('a',href=True):
         href=a['href']; label=clean(a.get_text(' ',strip=True))
@@ -102,7 +114,7 @@ def html_extract(raw,url,source):
                 publication=(dt.get('datetime') or clean(dt.get_text())) if dt else None
                 if not publication and parent.name=='tr':
                     table=parent.find_parent('table')
-                    headers=[clean(th.get_text()).casefold() for th in table.select('thead th')] if table else []
+                    headers=table_headers.get(id(table),[])
                     cells=parent.find_all('td',recursive=False)
                     for index,header in enumerate(headers):
                         if header in ('date','published','publication date','date published') and index<len(cells):

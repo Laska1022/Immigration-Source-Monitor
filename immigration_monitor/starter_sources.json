@@ -33,7 +33,7 @@
     "tags": "IEC",
     "source_type": "public guidance",
     "scope": "main content",
-    "expected": "recognized organizations"
+    "expected": "Work and Travel in Canada using a Recognized Organization"
   },
   {
     "title": "IEC recognized organizations — operational instructions",
@@ -50,8 +50,9 @@
     "agency": "British Columbia",
     "tags": "BC PNP",
     "source_type": "announcement",
-    "scope": "listing entries",
-    "expected": "news"
+    "scope": "main content",
+    "expected": "news",
+    "selector": "main .col-lg-9"
   },
   {
     "title": "BC PNP invitations",
@@ -68,8 +69,9 @@
     "agency": "British Columbia",
     "tags": "BC PNP, guides",
     "source_type": "document index",
-    "scope": "listing entries",
-    "expected": "documents"
+    "scope": "main content",
+    "expected": "documents",
+    "selector": "main .col-lg-9"
   },
   {
     "title": "BC PNP employer information",

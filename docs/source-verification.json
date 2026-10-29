@@ -1,134 +1,159 @@
 {
-  "generated_utc": "2026-10-29T07:25:02+00:00",
+  "generated_utc": "2026-10-29T09:50:44+00:00",
   "results": [
     {
       "title": "IRCC Program Delivery Updates",
       "url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/operational-bulletins-manuals/updates.html",
-      "checked_utc": "2026-10-29T07:24:48+00:00",
+      "checked_utc": "2026-10-29T09:50:23+00:00",
       "method": "Public HTTP GET; robots verification; bounded main-content HTML extraction (no rendering)",
-      "result": "failed or blocked",
+      "result": "fetch and extraction passed",
       "redirects": [],
-      "limitations": [
-        "No verified current content or replacement URL. A failed prerequisite does not establish no change."
-      ],
-      "detail": "Network request failed (ProxyError)",
-      "response_metadata": {}
+      "limitations": [],
+      "final_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/operational-bulletins-manuals/updates.html",
+      "http_status": 200,
+      "raw_sha256": "783237a208b05c4e4b54780333ac72e69ee3a3d584a830c38b0311b9ab072773",
+      "extracted_characters": 478294
     },
     {
       "title": "IRCC notices",
       "url": "https://www.canada.ca/en/immigration-refugees-citizenship/news/notices.html",
-      "checked_utc": "2026-10-29T07:24:48+00:00",
+      "checked_utc": "2026-10-29T09:50:27+00:00",
       "method": "Public HTTP GET; robots verification; bounded main-content HTML extraction (no rendering)",
-      "result": "failed or blocked",
+      "result": "fetch and extraction passed",
       "redirects": [],
-      "limitations": [
-        "No verified current content or replacement URL. A failed prerequisite does not establish no change."
-      ],
-      "detail": "Network request failed (ProxyError)",
-      "response_metadata": {}
+      "limitations": [],
+      "final_url": "https://www.canada.ca/en/immigration-refugees-citizenship/news/notices.html",
+      "http_status": 200,
+      "raw_sha256": "7ec2d2c7b81b3ca0fede266781a33c1a48f4c7b65cc0604d45eaec1ed779b856",
+      "extracted_characters": 124093
     },
     {
       "title": "Express Entry rounds",
       "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations.html",
-      "checked_utc": "2026-10-29T07:24:50+00:00",
+      "checked_utc": "2026-10-29T09:50:28+00:00",
       "method": "Public HTTP GET; robots verification; bounded main-content HTML extraction (no rendering)",
-      "result": "failed or blocked",
+      "result": "extraction uncertain",
       "redirects": [],
       "limitations": [
         "No verified current content or replacement URL. A failed prerequisite does not establish no change."
       ],
-      "detail": "Network request failed (ProxyError)",
+      "final_url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations.html",
+      "http_status": 200,
+      "raw_sha256": "859e5de42182cd4d5bffdf3ec4abe7ec351d57f9ae9e63cb5dbcb93fa2fc7383",
+      "detail": "Dynamic JSON field has no verified content; inspect the official public data request",
       "response_metadata": {}
     },
     {
       "title": "IEC recognized organizations — public guidance",
       "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/iec/recognized-organizations.html",
-      "checked_utc": "2026-10-29T07:24:52+00:00",
+      "checked_utc": "2026-10-29T09:50:30+00:00",
       "method": "Public HTTP GET; robots verification; bounded main-content HTML extraction (no rendering)",
-      "result": "failed or blocked",
+      "result": "fetch and extraction passed",
       "redirects": [],
-      "limitations": [
-        "No verified current content or replacement URL. A failed prerequisite does not establish no change."
-      ],
-      "detail": "Network request failed (ProxyError)",
-      "response_metadata": {}
+      "limitations": [],
+      "final_url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/iec/recognized-organizations.html",
+      "http_status": 200,
+      "raw_sha256": "9e827fcfa481fdb5c0c9d2ea88da0e1c670e846c8c54d3abdd16873d86465847",
+      "extracted_characters": 5762
     },
     {
       "title": "IEC recognized organizations — operational instructions",
       "url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/operational-bulletins-manuals/temporary-residents/foreign-workers/exemption-codes/international-experience/canadian-interests-reciprocal-employment-international-experience-canada-recognized-organizations-foreign-youth.html",
-      "checked_utc": "2026-10-29T07:24:54+00:00",
+      "checked_utc": "2026-10-29T09:50:33+00:00",
       "method": "Public HTTP GET; robots verification; bounded main-content HTML extraction (no rendering)",
-      "result": "failed or blocked",
+      "result": "fetch and extraction passed",
       "redirects": [],
-      "limitations": [
-        "No verified current content or replacement URL. A failed prerequisite does not establish no change."
-      ],
-      "detail": "Network request failed (ProxyError)",
-      "response_metadata": {}
+      "limitations": [],
+      "final_url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/operational-bulletins-manuals/temporary-residents/foreign-workers/exemption-codes/international-experience/canadian-interests-reciprocal-employment-international-experience-canada-recognized-organizations-foreign-youth.html",
+      "http_status": 200,
+      "raw_sha256": "6414f6ef2f47ebca625180015d5f388423a87bc98438048957fb596afd252680",
+      "extracted_characters": 16552
     },
     {
       "title": "BC PNP news",
       "url": "https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/news",
-      "checked_utc": "2026-10-29T07:24:56+00:00",
+      "checked_utc": "2026-10-29T09:50:34+00:00",
       "method": "Public HTTP GET; robots verification; bounded main-content HTML extraction (no rendering)",
-      "result": "failed or blocked",
+      "result": "fetch and extraction passed",
       "redirects": [],
-      "limitations": [
-        "No verified current content or replacement URL. A failed prerequisite does not establish no change."
-      ],
-      "detail": "Network request failed (ProxyError)",
-      "response_metadata": {}
+      "limitations": [],
+      "final_url": "https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/news",
+      "http_status": 200,
+      "raw_sha256": "6a382186559207a94f1ef4ef2c56c889486387d12dacb762fd728601d6054f5f",
+      "extracted_characters": 12833
     },
     {
       "title": "BC PNP invitations",
       "url": "https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/invitations-to-apply",
-      "checked_utc": "2026-10-29T07:24:56+00:00",
+      "checked_utc": "2026-10-29T09:50:37+00:00",
       "method": "Public HTTP GET; robots verification; bounded main-content HTML extraction (no rendering)",
-      "result": "failed or blocked",
+      "result": "fetch and extraction passed",
       "redirects": [],
-      "limitations": [
-        "No verified current content or replacement URL. A failed prerequisite does not establish no change."
-      ],
-      "detail": "Network request failed (ProxyError)",
-      "response_metadata": {}
+      "limitations": [],
+      "final_url": "https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/invitations-to-apply",
+      "http_status": 200,
+      "raw_sha256": "798c245827cd7d2b29896ac92d7c6e2fa53046a60f706e25f6de4a58b8e1c5bf",
+      "extracted_characters": 14254
     },
     {
       "title": "BC PNP documents",
       "url": "https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/documents",
-      "checked_utc": "2026-10-29T07:24:58+00:00",
+      "checked_utc": "2026-10-29T09:50:40+00:00",
       "method": "Public HTTP GET; robots verification; bounded main-content HTML extraction (no rendering)",
-      "result": "failed or blocked",
+      "result": "fetch and extraction passed",
       "redirects": [],
-      "limitations": [
-        "No verified current content or replacement URL. A failed prerequisite does not establish no change."
-      ],
-      "detail": "Network request failed (ProxyError)",
-      "response_metadata": {}
+      "limitations": [],
+      "final_url": "https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/documents",
+      "http_status": 200,
+      "raw_sha256": "f72c2a5659981e6ef4461964fbf2215ee41e0669bc68bbff3b3211c251c58582",
+      "extracted_characters": 2315,
+      "guide_candidates": [
+        {
+          "title": "Skills Immigration Program Guide (PDF, 1MB)",
+          "url": "https://www.welcomebc.ca/immigrate-to-b-c/bc-pnp-si-program-guide-pdf"
+        },
+        {
+          "title": "Skills Immigration Application Guide (PDF, 1MB)",
+          "url": "https://www.welcomebc.ca/immigrate-to-b-c/bc-pnp-si-technical-guide-pdf"
+        },
+        {
+          "title": "Entrepreneur Immigration Program Guide - Base Stream (PDF, 1MB)",
+          "url": "https://www.welcomebc.ca/immigrate-to-b-c/bc-pnp-ei-program-guide-pdf"
+        },
+        {
+          "title": "Entrepreneur Immigration Program Guide - Regional Stream (PDF, 1MB)",
+          "url": "https://www.welcomebc.ca/immigrate-to-b-c/bc-pnp-ei-regional-pilot-program-guide-pdf"
+        },
+        {
+          "title": "Entrepreneur Immigration Application Guide (PDF, 1MB)",
+          "url": "https://www.welcomebc.ca/immigrate-to-b-c/bc-pnp-ei-application-guide-pdf"
+        },
+        {
+          "title": "Entrepreneur Immigration Post-Arrival Guide (PDF, 1MB)",
+          "url": "https://www.welcomebc.ca/immigrate-to-b-c/bc-pnp-ei-post-arrival-guide-pdf"
+        },
+        {
+          "title": "Skills Immigration Post-Nomination Guide (PDF, 1MB)",
+          "url": "https://www.welcomebc.ca/immigrate-to-b-c/bc-pnp-si-post-nomination-guide-pdf"
+        },
+        {
+          "title": "Entrepreneur Immigration Post-Nomination Guide (PDF, 1MB)",
+          "url": "https://www.welcomebc.ca/immigrate-to-b-c/bc-pnp-ei-post-nomination-guide-pdf"
+        }
+      ]
     },
     {
       "title": "BC PNP employer information",
       "url": "https://www.welcomebc.ca/immigrate-to-b-c/for-employers",
-      "checked_utc": "2026-10-29T07:25:00+00:00",
+      "checked_utc": "2026-10-29T09:50:41+00:00",
       "method": "Public HTTP GET; robots verification; bounded main-content HTML extraction (no rendering)",
-      "result": "failed or blocked",
+      "result": "fetch and extraction passed",
       "redirects": [],
-      "limitations": [
-        "No verified current content or replacement URL. A failed prerequisite does not establish no change."
-      ],
-      "detail": "Network request failed (ProxyError)",
-      "response_metadata": {}
-    }
-  ],
-  "network_prerequisite_diagnostics": [
-    {
-      "url": "https://www.canada.ca/robots.txt",
-      "checked_utc": "2026-10-29T07:48:32+00:00",
-      "result": "Managed proxy CONNECT denied: 403 Forbidden"
-    },
-    {
-      "url": "https://www.welcomebc.ca/robots.txt",
-      "checked_utc": "2026-10-29T07:48:32+00:00",
-      "result": "Managed proxy CONNECT denied: 403 Forbidden"
+      "limitations": [],
+      "final_url": "https://www.welcomebc.ca/immigrate-to-b-c/for-employers",
+      "http_status": 200,
+      "raw_sha256": "df4067c4d3d99a3db34221ee750c431976fa713d796e856e89ef52eed46c5978",
+      "extracted_characters": 4267
     }
   ]
 }
