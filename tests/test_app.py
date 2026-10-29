@@ -146,3 +146,57 @@ def test_fictional_demo(store):
     assert store.one('SELECT state FROM reviews WHERE event_id=?',(result['review_event'],))['state']=='Reviewed'
     assert 'FICTIONAL' in store.one('SELECT body FROM digests')['body']
     assert store.one('SELECT paused FROM sources')['paused']==1
+
+
+def test_restore_rejects_extra_trigger(store,source,tmp_path):
+    check(store,source,page());backup=create_backup(store)
+    extracted=validate_backup(backup);dbpath=tmp_path/'tampered.sqlite3';dbpath.write_bytes(extracted)
+    with sqlite3.connect(dbpath) as db:db.execute('CREATE TRIGGER malicious AFTER INSERT ON settings BEGIN DELETE FROM sources; END')
+    data=dbpath.read_bytes();bad=tmp_path/'tampered.zip'
+    with zipfile.ZipFile(bad,'w') as z:
+        z.writestr('monitor.sqlite3',data);z.writestr('manifest.json',json.dumps({'format':1,'sha256':hashlib.sha256(data).hexdigest()}))
+    with pytest.raises(ValueError,match='schema'):restore_backup(store,bad)
+
+
+def test_digest_event_watermark_no_same_second_loss(store,source):
+    check(store,source,page());check(store,source,page('must not'))
+    first=make_digest(store,force=True,at='2099-01-01T06:00:00+00:00')
+    stamp=store.one('SELECT created FROM digests WHERE id=?',(first,))['created']
+    check(store,source,page('may'))
+    with store.connect() as db:db.execute('UPDATE events SET detected=? WHERE id=(SELECT MAX(id) FROM events)',(stamp,))
+    second=make_digest(store,force=True,at='2099-01-02T06:00:00+00:00')
+    assert 'may' in store.one('SELECT body FROM digests WHERE id=?',(second,))['body']
+
+
+def test_backup_restore_refuses_active_ui(store,source):
+    from filelock import FileLock,Timeout
+    check(store,source,page());backup=create_backup(store)
+    with FileLock(str(store.root/'ui.lock')):
+        with pytest.raises(Timeout):restore_backup(store,backup)
+
+
+def test_failed_capture_does_not_render_false_deletions(store,source):
+    check(store,source,page());check(store,source,b'<html><main>empty</main></html>')
+    client,token=client_for(store)
+    body=client.get('/events/1').data
+    assert b'does not establish that earlier content was removed' in body
+    assert b'<del>' not in body
+
+
+def test_starter_registry_is_idempotent_and_unverified(store):
+    store.seed();store.seed()
+    sources=store.rows('SELECT * FROM sources')
+    assert len(sources)==9
+    assert all(s['baseline_id'] is None and s['last_success'] is None and s['health']=='never checked' for s in sources)
+
+
+def test_live_report_command_does_not_pass_blocked_sources(tmp_path,monkeypatch):
+    import immigration_monitor.verification as verification
+    class Blocked:
+        def __init__(self,*args,**kwargs):pass
+        def fetch(self,*args,**kwargs):raise CheckError('Simulated network restriction')
+    monkeypatch.setattr(verification,'Fetcher',Blocked)
+    path=tmp_path/'report.json'
+    assert verification.verify_sources(path) is False
+    results=json.loads(path.read_text())['results']
+    assert len(results)==9 and all(r['result']=='failed or blocked' for r in results)

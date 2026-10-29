@@ -14,7 +14,7 @@ from pypdf import PdfReader
 from .db import digest_hash
 from .fetch import CheckError, MAX_BYTES, canonical
 
-PARSER_VERSION='html-1/pdf-1/feed-1'
+PARSER_VERSION='html-2/pdf-1/feed-1'
 EFFECTIVE_UNKNOWN='Effective date not established from the monitored content.'
 
 
@@ -38,7 +38,8 @@ def clean(s):
 
 def date_metadata(text):
     sentences=re.split(r'(?<=[.!?])\s+|\n',text)
-    effective=[s for s in sentences if re.search(r'\b(effective|takes? effect|comes? into force)\b',s,re.I) and re.search(r'\b\d{1,4}\b',s)]
+    date_pattern=r'\b(?:\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{2,4}|(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:,?\s+\d{4})?)\b'
+    effective=[s for s in sentences if re.search(r'\b(effective|takes? effect|comes? into force)\b',s,re.I) and re.search(date_pattern,s,re.I)]
     return {'effective_wording':'\n'.join(effective[:10]) or EFFECTIVE_UNKNOWN}
 
 
@@ -84,19 +85,31 @@ def html_extract(raw,url,source):
     links=[]; entries=[]; seen=set()
     for a in root.find_all('a',href=True):
         href=a['href']; label=clean(a.get_text(' ',strip=True))
-        if not href or href.startswith('#'): continue
+        if not href: continue
+        if href.startswith('#'):
+            a.replace_with((label or href)+' ['+urljoin(url,href)+']')
+            continue
         target=urljoin(url,href)
         if urlsplit(target).scheme not in ('http','https'): continue
+        fragment=urlsplit(target).fragment
         target=canonical(target)
+        display_target=target+('#'+fragment if fragment else '')
         links.append({'title':label or target,'url':target})
         if source.get('scope')=='listing entries' and target not in seen:
             parent=a.find_parent(['tr','li','article'])
             if parent:
                 dt=parent.find('time')
                 publication=(dt.get('datetime') or clean(dt.get_text())) if dt else None
-                entries.append({'key':target,'url':target,'title':label or target,'publication':publication,'context':clean(parent.get_text(' ',strip=True))})
+                if not publication and parent.name=='tr':
+                    table=parent.find_parent('table')
+                    headers=[clean(th.get_text()).casefold() for th in table.select('thead th')] if table else []
+                    cells=parent.find_all('td',recursive=False)
+                    for index,header in enumerate(headers):
+                        if header in ('date','published','publication date','date published') and index<len(cells):
+                            publication=clean(cells[index].get_text());break
+                entries.append({'key':target,'url':target,'title':label or target,'publication':publication,'context':clean(parent.get_text(' ',strip=True)),'target':display_target})
                 seen.add(target)
-        a.replace_with((label or target)+' ['+target+']')
+        a.replace_with((label or target)+' ['+display_target+']')
     # Preserve block order and row/header context; whitespace alone is normalized.
     for tag in list(root.find_all(['h1','h2','h3','h4','h5','h6','p','li','tr','div','section','br'])):
         if tag.name=='li': tag.insert_before('\n• ')
@@ -113,7 +126,7 @@ def html_extract(raw,url,source):
     if source.get('scope')=='listing entries':
         if not entries: raise CheckError('No identifiable listing entries; configure listing container','extraction uncertain')
         # Stable URL identity means inserting/reordering a row does not change all entries.
-        text='\n'.join(e['title']+' ['+e['url']+'] '+(e['publication'] or '')+' '+e['context'] for e in sorted(entries,key=lambda e:e['key']))
+        text='\n'.join(e['title']+' ['+e.get('target',e['url'])+'] '+(e['publication'] or '')+' '+e['context'] for e in sorted(entries,key=lambda e:e['key']))
     meta.update(date_metadata(text))
     return Extracted(text,meta,entries,links)
 
@@ -153,7 +166,7 @@ def feed_extract(raw,url):
         summary=' '.join(clean(''.join(fields[k].itertext())) for k in ['summary','description','content'] if k in fields)
         entries.append({'key':target,'url':target,'title':title,'publication':date,'context':summary})
     if not entries: raise CheckError('Feed contains no identifiable entries','extraction uncertain')
-    text='\n'.join(e['title']+' ['+e['url']+'] '+(e['publication'] or '')+' '+e['context'] for e in sorted(entries,key=lambda e:e['key']))
+    text='\n'.join(e['title']+' ['+e.get('target',e['url'])+'] '+(e['publication'] or '')+' '+e['context'] for e in sorted(entries,key=lambda e:e['key']))
     return Extracted(text,date_metadata(text),entries,[{'title':e['title'],'url':e['url']} for e in entries],format='feed')
 
 

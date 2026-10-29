@@ -12,3 +12,5 @@ snapshots/
 backups/
 *.log
 credentials*
+*.dpapi
+session.key

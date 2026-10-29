@@ -1,24 +1,46 @@
 # Handoff
 
-Status: READY (remote SHA verified after publication).
-Continuation branch: `codex/immigration-monitor`. Use the latest tip containing this handoff; no stable-branch merge authorized. The originally empty repository may use this development branch as GitHub's default.
+**Status: READY** — the publishing agent verifies the remote SHA after pushing this checkpoint. READY means published continuation, not full live-release acceptance.
 
-Milestone: local application implemented; P06 live-source verification blocked; P07 operator documentation/validation in progress.
+Continuation branch: **`codex/immigration-monitor`**. Checkpoint identity: the latest commit containing this file (`git log -1`). No PR is required/created; no stable-branch merge authorized. The repository was originally empty, so GitHub may use this development branch as its initial default.
 
-Implemented: Python/Flask/Waitress loopback UI, source CRUD/grouping/pause/removal with retained history, explicit host registry, approval-gated guides/instructions, inbox/review notes, side-by-side and inline diffs, history/search/download/export, health/overdue coverage, settings and digest archive, consistent backup and checked restore. Independent CLI checker uses SQLite/file locks, six-hour defaults, one catch-up, persistent health transitions and notification outbox. SMTP is opt-in; interrupted sends become uncertain, never automatically resent. Windows setup/launcher/task/DPAPI password scripts are supplied. Full core evidence behavior was implemented in prior checkpoint `7b9ff1258ff3a9844fa8df678700c2e56f776e33`.
+## Current milestone
 
-Checks: `/workspace/ism-venv/bin/python -m pytest -q` → **37 passed** on Linux. `compileall` passed. CLI fictional demo at `/tmp/ism-demo-acceptance` completed baseline → wording edit → simulated failure → recovery → reviewed alert → digest. UI server starts on loopback under escalated execution (sandbox denies binding); actual HTTP smoke is next. Windows/real SMTP are NOT tested.
+Local application implemented; **P06 live-source validation is blocked**. P07's docs/local validation are complete; final release acceptance awaits P06 and Windows verification. Continue this implementation rather than replacing the stack or repeating completed fixture work.
 
-Live report: `docs/source-verification.json` and `.md`, all nine starter URLs blocked. Local DNS is unavailable; explicitly trusted proxy mode delegates resolution/egress enforcement to the managed proxy. Both government-host robots probes return **CONNECT 403 Forbidden**. No government page content, redirects, current guide links, or dynamic Express Entry data has been verified. An environment draft adds only `www.canada.ca` and `www.welcomebc.ca`; it is saved but NOT applied/published. User must review/save/publish in environment settings. Do not bypass restrictions or invent replacement URLs. After policy activation, rerun live verification and inspect official data requests. BC guide candidates must be approved in the app; none were fabricated.
+Implemented: Python/Flask/Waitress loopback UI; SQLite immutable versions and retained failed captures; source CRUD/grouping/pause/soft removal; approved exact-host registry; selected sections/listings/independent PDFs; approval-gated candidates and bounded one-hop article capture; diff/review/history/export; six-hour independent checker and locks/catch-up; persistent first-unhealthy/recovery events; opt-in SMTP queue with explicit uncertain outcomes; timezone daily digest/coverage; backup/validated restore; Windows setup/launcher/scheduler/DPAPI password scripts; complete operator/security/limitation docs.
 
-Next priorities:
-1. Finish README, security/limitations/Windows/backup instructions and exact validation report; perform local HTTP smoke.
-2. Add edge-case tests for Retry-After, dynamic populated-shell rejection, restored-schema validation and digest boundaries; inspect correctness/security; fix verified defects.
-3. When official-host access is enabled, run `ISM_TRUSTED_PROXY=1 python -m immigration_monitor verify-sources --output docs/source-verification.json`. Inspect dynamic pages and only implement adapters using observed official endpoints; do not claim current live coverage until verified. Discover BC guides, leave approval to user.
-4. Test Windows scripts on Windows and opt-in SMTP with the user's chosen provider when available. No credentials should be put in Git.
+Important code: `db.py` schema; `fetch.py` network controls; `extract.py` bounded parsing (`html-2/pdf-1/feed-1`); `monitor.py` observation state machine; `notifications.py` digest/outbox; `backup.py` checked restore; `web.py` browser routes; `__main__.py` CLI. `starter_sources.json` contains exactly the nine requested URLs. No guide URLs were invented.
 
-Environment: recreate with Python 3.11+ and `python -m pip install --require-hashes -r requirements.txt`. Run `python -m immigration_monitor init`, `serve`, `check`. Runtime data defaults outside checkout; `ISM_DATA_DIR` can select another external folder. `/workspace/ism-venv` and `/tmp/ism-demo-acceptance` are current-task only, not shared project memory. `docs/PROJECT_SPEC.md` is authoritative. No Docker/cloud host/AI needed.
+## Verified results
 
-Important decisions/limits: immutable raw blobs are in SQLite for consistent backup. Failed captures never replace baselines. Direct HTTP sockets pin validated public IPs and verify TLS hostname; trusted proxies own DNS/address enforcement, so opt-in `ISM_TRUSTED_PROXY=1` is only for a managed/trusted egress proxy. Redirects require review. PDF pages with no reliable text fail; all PDF table/layout extraction needs visual verification. Dynamic empty placeholders and unverified Express Entry round tables are uncertain, not unchanged. SMTP has no exactly-once delivery guarantee; manual uncertain-message reconciliation is required. Backup restores disable email and hold unsent deliveries; scheduler registration/DPAPI credentials are separate. Large diffs use bounded previews and retained full originals. No retention deletion exists; history is kept.
+- `python -m pytest -q`: **55 passed**, no failures/skips (Linux Python 3.12.14).
+- Hash-locked pip install and `pip check`: passed. Saved environment install script was exercised successfully (then-current 53 tests); the final expanded suite is 55 passing tests.
+- `python scripts/smoke-local.py`: passed fresh fictional demo, six actual HTTP screens, security headers, attachment download, own-server cleanup.
+- Fictional CLI demo covers baseline → wording edit → failed check → recovery → browser review → digest. `init` is idempotent (nine unverified sources, no duplicate baselines).
+- Backup round-trip and unsafe schema/path/integrity tests passed; compileall and whitespace checks passed.
+- **Live:** all nine blocked. `docs/source-verification.json` / `.md` preserve each attempt and two diagnostic probes at **2026-10-29 07:48:32 UTC**, both returning managed-proxy CONNECT **403 Forbidden**. No official page/robots body, redirects, current guides, or dynamic data was verified.
+- **Not run:** Windows execution; actual SMTP delivery. Fake-sender tests are not real-email evidence. No graphical browser test was performed.
 
-Unpublished work: none intended after this checkpoint's push; confirm `git ls-remote origin refs/heads/codex/immigration-monitor`. If push fails, mark NEEDS_PUBLISHING and export a Git bundle. Continue the existing implementation; do not restart it.
+See `docs/VALIDATION.md` for evidence and `docs/LIMITATIONS.md` for precise gaps.
+
+## Exact next steps, priority order
+
+1. Resume safely: inspect status/remotes, fetch, verify this is the latest remote `codex/immigration-monitor` tip, read AGENTS/PLAN/spec, install locked dependencies, run pytest. Preserve unexpected changes; never force-push.
+2. Enable the requested official domains through the supported cloud environment settings. A draft adds only `www.canada.ca` and `www.welcomebc.ca` to custom destinations; it is **saved, not applied/published**. Review/save/publish, inspect current `environment_status`, then retry:
+   `ISM_TRUSTED_PROXY=1 python -m immigration_monitor verify-sources --output docs/source-verification.json`
+   Only use that flag for the reviewed managed proxy. The command now exits 1 for any blocked/failed source. Do not bypass access controls or infer withdrawal/no change.
+3. Inspect live official page structure and public network/data requests. Implement dynamic handling only for observed verified official endpoints (or safely bounded rendering); no dynamic JSON adapter/browser renderer exists yet. Express Entry's unpopulated table and other empty placeholders intentionally yield uncertainty. Confirm main-content/list selectors and expected markers for all nine pages.
+4. From the actual BC documents page discover Skills Immigration Program Guide and Application Guide. Present candidates in the app and require user approval before monitoring them. Verify same-URL replacements and changed download links against actual sources; fixture coverage already passes.
+5. On Windows run Setup.cmd, Launch.cmd, explicit scheduler install/remove and DPAPI credential setup. Verify browser-closed checking, sleep/offline catch-up, restore, and task results. With optional user-configured SMTP, verify a real readable mobile digest and failure handling. Do not claim unrun checks passed.
+6. Update PLAN/HANDOFF/VALIDATION/limitations and publish another tested checkpoint after each meaningful unit. Final live acceptance remains pending until supported by evidence.
+
+## Decisions, setup, publication
+
+- Stack: Python 3.11+, Flask, Waitress, SQLite, BeautifulSoup, pypdf, filelock. No cloud runtime, AI, Docker, paid services, or external DB requirement.
+- `python -m pip install --require-hashes -r requirements.txt`; `python -m pytest -q`; `python -m immigration_monitor init/serve/check`. Read README for Windows paths and commands.
+- Runtime data is outside checkout. Default Windows path: `%LOCALAPPDATA%\ImmigrationSourceMonitor`. `ISM_DATA_DIR` may override. Current-task `/workspace/ism-venv`, `/workspace/ism-runtime`, and `/tmp` demos are **not cross-account project memory**. Recreate them from committed instructions. The cloud draft saves complete `install_script` and `start_skill`; neither save executes/applies/publishes automatically. A new-task restore has not been tested.
+- Every valid full observation is retained; 304 needs a corresponding baseline and daily full validation. Failures retain the old valid baseline. Parser/config changes explicitly rebaseline; A→B→A remains evidence. PDFs require visual table/layout review; no OCR. Failed captures are never rendered as a substantive deletion comparison.
+- Default direct fetches pin validated public DNS addresses and verify TLS hostname. Explicit trusted proxy mode delegates resolution/public-address enforcement to that reviewed proxy because local DNS is unavailable here. The proxy denial must be fixed in settings, not bypassed.
+- SQLite stores raw evidence blobs for coherent backups; reviews are separate. SMTP cannot ensure exactly-once delivery: interrupted sends become uncertain and require mailbox reconciliation, with no automatic resend. Restores disable email/hold unsent messages; credentials and OS task registration are separate. Restore size limit is 512 MiB extracted DB, exact schema compatibility required.
+- No source code changes are left intentionally unpublished at this checkpoint. Verify `git rev-parse HEAD` equals `git ls-remote origin refs/heads/codex/immigration-monitor`. Previous published milestone: `670a9f18bf28948cad5a90aee0451d719f3096da`. If publication fails, mark NEEDS_PUBLISHING and provide a Git bundle; another account cannot recover local-only files.

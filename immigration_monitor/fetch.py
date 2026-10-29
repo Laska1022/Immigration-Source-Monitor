@@ -83,11 +83,20 @@ def retry_after(value):
 
 
 class Fetcher:
-    def __init__(self, approved, delay=2.0):
+    def __init__(self, approved, delay=2.0, store=None):
         self.approved = set(approved)
         self.delay = delay
         self.last = {}
         self.robots = {}
+        self.store = store
+        self.cooldowns = store.settings().get('network_cooldowns',{}) if store else {}
+
+    def _cooldown(self, url, response):
+        until=retry_after(response.headers.get('retry-after'))
+        if until and response.status in (429,503):
+            self.cooldowns[urlsplit(url).hostname]=until
+            if self.store:self.store.set_settings({'network_cooldowns':self.cooldowns})
+        return until
 
     def _validate(self, url):
         trusted = os.environ.get('ISM_TRUSTED_PROXY') == '1' and bool(getproxies().get(urlsplit(url).scheme))
@@ -100,6 +109,9 @@ class Fetcher:
             time.sleep(self.delay-elapsed)
         self.last[host] = time.monotonic()
         p = urlsplit(url)
+        until=self.cooldowns.get(host)
+        if until and until>datetime.now(timezone.utc).isoformat():
+            raise CheckError('Domain deferred by Retry-After',retry_at=until)
         start = time.monotonic()
         proxies = getproxies()
         if proxies.get(p.scheme):
@@ -117,7 +129,7 @@ class Fetcher:
                         chunks.append(chunk)
                     return Response(r.status_code,url,b''.join(chunks),{k.lower():v for k,v in r.headers.items()})
             except requests.RequestException as exc:
-                raise CheckError('Network request failed ('+type(exc).__name__+')') from exc
+                raise CheckError('Network request failed ('+type(exc).__name__+')'+('; proxy denied CONNECT with HTTP 403' if '403 Forbidden' in str(exc) else '')) from exc
         conn = None
         try:
             port = p.port or (443 if p.scheme=='https' else 80)
@@ -151,7 +163,7 @@ class Fetcher:
             elif r.status==200 and b'<html' not in r.body.lower() and len(r.body)<1024*1024:
                 parser=RobotFileParser(); parser.parse(r.body.decode('utf-8',errors='replace').splitlines())
             else:
-                raise CheckError('Robots rules could not be verified (HTTP '+str(r.status)+')',metadata={'robots_url':r.url,'status':r.status},retry_at=retry_after(r.headers.get('retry-after')))
+                raise CheckError('Robots rules could not be verified (HTTP '+str(r.status)+')',metadata={'robots_url':r.url,'status':r.status},retry_at=self._cooldown(url,r))
             self.robots[origin]=parser
         parser=self.robots[origin]
         if not parser.can_fetch(USER_AGENT,url):
@@ -192,7 +204,7 @@ class Fetcher:
             if r.status not in (200,304):
                 status='source unavailable or redirected' if r.status in (404,410) else 'failed or blocked'
                 raise CheckError('HTTP '+str(r.status)+'; no conclusion about policy withdrawal',status,
-                    {'status':r.status,'final_url':r.url,'redirects':redirects},retry_after(r.headers.get('retry-after')))
+                    {'status':r.status,'final_url':r.url,'redirects':redirects},self._cooldown(current,r))
             # Redirects require explicit source URL review. Never silently change identity.
             if redirects:
                 raise CheckError('Redirect observed; review final URL before approving it','source unavailable or redirected',{'final_url':r.url,'redirects':redirects})

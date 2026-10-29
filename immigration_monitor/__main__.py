@@ -23,7 +23,7 @@ def main():
     if args.data_dir:os.environ['ISM_DATA_DIR']=args.data_dir
     if args.command=='verify-sources':
         from .verification import verify_sources
-        verify_sources(Path(args.output));return 0
+        return 0 if verify_sources(Path(args.output)) else 1
     store=Store()
     if args.command=='init':store.seed();print('Initialized local data at',store.root)
     elif args.command=='serve':
@@ -41,7 +41,7 @@ def main():
     elif args.command=='check':
         from .monitor import run_checks,UNHEALTHY
         from .notifications import make_digest,deliver_pending
-        result=run_checks(store,source_id=args.source,force=args.all)
+        result=run_checks(store,source_id=args.source,force=args.all,lock_timeout=600 if args.source else 0)
         make_digest(store);delivery=deliver_pending(store)
         print(json.dumps({'checks':result,'delivery':delivery}))
         return 1 if any(status in UNHEALTHY for _,status in result['sources']) else 0

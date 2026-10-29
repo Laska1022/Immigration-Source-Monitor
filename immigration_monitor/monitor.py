@@ -50,6 +50,13 @@ def event(db,source,kind,stamp,old_id,new_id,summary,old_text='',new_text='',met
         'old_excerpt':old_excerpt,'new_excerpt':new_excerpt,'sections':sections,
         'effective_wording':EFFECTIVE_UNKNOWN}
     evidence.update(meta or {})
+    for key,version in [('old_raw_hash',old_id),('new_raw_hash',new_id)]:
+        row=db.execute('SELECT raw_hash FROM versions WHERE id=?',(version,)).fetchone() if version else None
+        evidence[key]=row[0] if row else None
+    if kind=='document_bytes_changed':
+        evidence['old_excerpt']=old_text[:3000]
+        evidence['new_excerpt']=new_text[:3000]
+        evidence['sections']=['PDF file bytes; extracted text identical']
     cur=db.execute('INSERT INTO events(source_id,kind,detected,previous_observed,old_version,new_version,summary,priority,evidence) VALUES (?,?,?,?,?,?,?,?,?)',
         (source['id'],kind,stamp,source['last_success'],old_id,new_id,summary,priority(old_text,new_text,rules or {}) if kind in ('content_changed','new_entry','document_bytes_changed') else '',json.dumps(evidence)))
     db.execute('INSERT INTO reviews(event_id,updated) VALUES (?,?)',(cur.lastrowid,stamp))
@@ -131,7 +138,7 @@ def check_one(store,source,fetcher,extractor=bounded_extract):
                         oldmap={e['key']:e for e in oldmeta.get('entries',[])}
                         newmap={e['key']:e for e in ex.entries}
                         # New entries have their own events. Compare retained/removed entries for quiet edits.
-                        text_changed=any(k not in newmap or newmap[k]!=v for k,v in oldmap.items())
+                        text_changed=any(k not in newmap or newmap[k]!=v for k,v in oldmap.items()) or any(k in known and k not in oldmap for k in newmap)
                         if new_entries: status='change detected'
                     if text_changed:
                         _,_,sections=changed_excerpts(old['text'],ex.text)
@@ -151,7 +158,8 @@ def check_one(store,source,fetcher,extractor=bounded_extract):
             db.execute('INSERT INTO attempts(source_id,attempted,status,detail,version_id,metadata) VALUES (?,?,?,?,?,?)',
                 (source['id'],stamp,status,'',version_id,json.dumps({'http_status':r.status,'final_url':r.url})))
         return status
-    except CheckError as exc:
+    except Exception as exc:
+        if not isinstance(exc,CheckError):exc=CheckError('Internal check failure ('+type(exc).__name__+'); baseline retained')
         with store.connect() as db:
             if r and r.body: version_id=save_version(db,source,r,None,stamp,str(exc))
             if source['health'] not in UNHEALTHY:
@@ -171,8 +179,21 @@ def capture_articles(store,fetcher,extractor=bounded_extract):
             r=fetcher.fetch(c['url'])
             ex=extractor(r.body,r.url,{'scope':'main content'},r.headers.get('content-type',''))
             with store.connect() as db:
+                article_meta={'original_url':c['url'],'final_url':r.url,'retrieved':now(),
+                    'raw_hash':digest_hash(r.body),'text_hash':digest_hash(ex.text),'parser':PARSER_VERSION,
+                    'config_hash':config_hash({'scope':'main content'}),
+                    'response':{k:v for k,v in r.headers.items() if k in ['content-type','etag','last-modified','date']},
+                    'warnings':ex.warnings,**ex.metadata}
                 db.execute('UPDATE candidates SET raw=?,text=?,metadata=?,capture_status=? WHERE id=?',
-                    (r.body,ex.text,json.dumps({'url':r.url,'retrieved':now(),'raw_hash':digest_hash(r.body),'text_hash':digest_hash(ex.text),'parser':PARSER_VERSION,**ex.metadata}),'captured',c['id']))
+                    (r.body,ex.text,json.dumps(article_meta),'captured',c['id']))
+                for alert in db.execute("SELECT id,evidence FROM events WHERE source_id=? AND kind='new_entry'",(c['parent_id'],)).fetchall():
+                    evidence=json.loads(alert['evidence'])
+                    if evidence.get('entry_url')==c['url']:
+                        evidence['article_capture']=article_meta
+                        if not evidence.get('publication'):evidence['publication']=ex.metadata.get('publication')
+                        if ex.metadata.get('effective_wording')!=EFFECTIVE_UNKNOWN:
+                            evidence['effective_wording']=ex.metadata['effective_wording']
+                        db.execute('UPDATE events SET evidence=? WHERE id=?',(json.dumps(evidence),alert['id']))
                 approved={row[0] for row in db.execute('SELECT host FROM hosts')}
                 for link in ex.links[:100]:
                     if urlsplit(link['url']).hostname in approved and re.search(r'(instructions|manual|guide|requirements)',link['title'],re.I):
@@ -183,10 +204,10 @@ def capture_articles(store,fetcher,extractor=bounded_extract):
                 db.execute('UPDATE candidates SET capture_status=? WHERE id=?',(str(exc),c['id']))
 
 
-def run_checks(store,source_id=None,force=False,fetcher=None,extractor=bounded_extract):
+def run_checks(store,source_id=None,force=False,fetcher=None,extractor=bounded_extract,lock_timeout=0):
     try:
-        with FileLock(str(store.root/'operation.lock'),timeout=0):
-            fetcher=fetcher or Fetcher([r['host'] for r in store.rows('SELECT host FROM hosts')])
+        with FileLock(str(store.root/'operation.lock'),timeout=lock_timeout):
+            fetcher=fetcher or Fetcher([r['host'] for r in store.rows('SELECT host FROM hosts')],store=store)
             sql='SELECT * FROM sources WHERE removed=0 AND paused=0';params=[]
             if source_id is not None: sql+=' AND id=?';params.append(source_id)
             elif not force: sql+=' AND (next_due IS NULL OR next_due<=?)';params.append(now())

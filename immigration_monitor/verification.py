@@ -36,3 +36,4 @@ def verify_sources(output):
         md.extend(['## '+item['title'],item['url'],'', '- Result: '+item['result'],'- Checked UTC: '+item['checked_utc'],'- Extraction method: '+item['method'],
             '- Detail: '+item.get('detail','Valid extracted content captured'),'- Redirect evidence: '+json.dumps(item.get('response_metadata',{}).get('redirects',item['redirects'])),'- Limitations: '+' '.join(item['limitations']),''])
     output.with_suffix('.md').write_text('\n'.join(md))
+    return all(item['result']=='fetch and extraction passed' for item in results)

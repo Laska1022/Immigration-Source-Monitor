@@ -11,7 +11,7 @@ from filelock import FileLock
 
 from .db import now, SCHEMA
 
-MAX_RESTORE=2*1024*1024*1024
+MAX_RESTORE=512*1024*1024
 
 
 def create_backup(store):

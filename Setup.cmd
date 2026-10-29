@@ -7,6 +7,12 @@ if errorlevel 1 (
  pause
  exit /b 1
 )
+py -3 -c "import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)"
+if errorlevel 1 (
+ echo Python 3.11 or newer is required.
+ pause
+ exit /b 1
+)
 py -3 -m venv .venv
 if errorlevel 1 goto failed
 .venv\Scripts\python.exe -m pip install --require-hashes -r requirements.txt

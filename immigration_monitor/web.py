@@ -187,7 +187,8 @@ def create_app(store=None):
         if not e:abort(404)
         old=store.one('SELECT * FROM versions WHERE id=?',(e['old_version'],)) or {'text':''}
         new=store.one('SELECT * FROM versions WHERE id=?',(e['new_version'],)) or {'text':''}
-        a=old['text'];b=new['text'];tokens=[];diff_rows=[]
+        comparable=e['kind'] in ('content_changed','new_entry','document_bytes_changed','metadata_changed','internal_rebaseline')
+        a=old['text'] if comparable else '';b=new['text'] if comparable else '';tokens=[];diff_rows=[]
         large=len(a)+len(b)>200000
         if not large:
             aw=re.findall(r'\S+|\s+',a);bw=re.findall(r'\S+|\s+',b)
@@ -198,7 +199,7 @@ def create_app(store=None):
                     if k!=l:tokens.append(('insert',''.join(bw[k:l])))
             al=a.splitlines();bl=b.splitlines()
             for tag,i,j,k,l in difflib.SequenceMatcher(None,al,bl,autojunk=True).get_opcodes():diff_rows.append((tag,'\n'.join(al[i:j]),'\n'.join(bl[k:l])))
-        return render_template('comparison.html',event=e,evidence=json.loads(e['evidence']),old=old,new=new,tokens=tokens,diff_rows=diff_rows,large=large)
+        return render_template('comparison.html',event=e,evidence=json.loads(e['evidence']),old=old,new=new,tokens=tokens,diff_rows=diff_rows,large=large,comparable=comparable)
 
     @app.post('/events/<int:id>/review')
     def review(id):
@@ -227,6 +228,12 @@ def create_app(store=None):
         if not c:abort(404)
         return render_template('message.html',title=c['title'],message=c['capture_status']+'\n'+c['metadata']+'\n\n'+(c['text'] or 'No article captured.'))
 
+    @app.get('/candidates/<int:id>/raw')
+    def candidate_raw(id):
+        c=store.one('SELECT raw FROM candidates WHERE id=?',(id,))
+        if not c or c['raw'] is None:abort(404)
+        return send_file(io.BytesIO(c['raw']),as_attachment=True,download_name=f'article-{id}.bin',mimetype='application/octet-stream')
+
     @app.get('/history')
     def history():
         query=request.args.get('q','')[:200];page=max(1,int(request.args.get('page',1)))
@@ -243,10 +250,15 @@ def create_app(store=None):
         parts=['# Immigration Source Monitor — selected evidence\n\nPublic captured evidence and separately labelled private notes. No legal conclusions.']
         for row in rows:
             ev=json.loads(row['evidence'])
-            parts.append('\n\n## '+ev.get('title','')+'\nAgency: '+ev.get('agency','')+'\nOfficial link: '+ev.get('url','')+'\nTags: '+ev.get('tags','')+'\n'+row['summary']+'\nPrevious observation: '+str(row['previous_observed'])+'\nDetected UTC: '+row['detected']+'\nPublication: '+str(ev.get('publication','not stated'))+'\nModified: '+str(ev.get('modified','not stated'))+'\n'+ev.get('effective_wording','')+'\nUncertainty: '+'; '.join(ev.get('warnings',[]))+'\n\nOLD:\n'+ev.get('old_excerpt','')+'\n\nNEW:\n'+ev.get('new_excerpt','')+'\n\nPRIVATE USER INTERPRETATION ('+row['state']+'):\n'+row['interpretation']+'\nFOLLOW-UP:\n'+row['follow_up'])
+            parts.append('\n\n## '+ev.get('title','')+'\nAgency: '+ev.get('agency','')+'\nOfficial link: '+ev.get('url','')+'\nTags: '+ev.get('tags','')+'\n'+row['summary']+'\nPrevious observation: '+str(row['previous_observed'])+'\nDetected UTC: '+row['detected']+'\nPublication: '+str(ev.get('publication','not stated'))+'\nModified: '+str(ev.get('modified','not stated'))+'\n'+ev.get('effective_wording','')+'\nPrevious raw SHA-256: '+str(ev.get('old_raw_hash'))+'\nNew raw SHA-256: '+str(ev.get('new_raw_hash'))+'\nUncertainty: '+'; '.join(ev.get('warnings',[]))+'\n\nOLD:\n'+ev.get('old_excerpt','')+'\n\nNEW:\n'+ev.get('new_excerpt','')+'\n\nPRIVATE USER INTERPRETATION ('+row['state']+'):\n'+row['interpretation']+'\nFOLLOW-UP:\n'+row['follow_up'])
         content='\n'.join(parts)
         if request.form.get('format')=='html':
-            content='<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta http-equiv="Content-Security-Policy" content="default-src &apos;none&apos;"><title>Selected immigration source evidence</title><body><pre>'+html.escape(content)+'</pre></body></html>'
+            links=[]
+            for row in rows:
+                ev=json.loads(row['evidence']);url=ev.get('url','')
+                if urlsplit(url).scheme in ('http','https'):
+                    links.append('<li><a rel="noreferrer" href="'+html.escape(url,quote=True)+'">'+html.escape(ev.get('title',url))+'</a></li>')
+            content='<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta http-equiv="Content-Security-Policy" content="default-src &apos;none&apos;; style-src &apos;unsafe-inline&apos;"><title>Selected immigration source evidence</title><style>body{font:16px/1.6 system-ui;max-width:60em;margin:2em auto;padding:1em}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><body><h1>Official source links</h1><ul>'+''.join(links)+'</ul><pre>'+html.escape(content)+'</pre></body></html>'
             name='selected-evidence.html';mime='text/html'
         else:name='selected-evidence.md';mime='text/markdown'
         return send_file(io.BytesIO(content.encode()),as_attachment=True,download_name=name,mimetype=mime)

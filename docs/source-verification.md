@@ -93,3 +93,12 @@ https://www.welcomebc.ca/immigrate-to-b-c/for-employers
 - Detail: Network request failed (ProxyError)
 - Redirect evidence: []
 - Limitations: No verified current content or replacement URL. A failed prerequisite does not establish no change.
+
+## Network prerequisite diagnosis
+
+The initial failures were investigated separately using read-only robots requests through the configured managed proxy. No site robots policy or page content could be read. The runtime allowlist still excludes these hosts; saving a draft does not apply it.
+
+- https://www.canada.ca/robots.txt — Managed proxy CONNECT denied: 403 Forbidden; checked 2026-10-29T07:48:32+00:00
+- https://www.welcomebc.ca/robots.txt — Managed proxy CONNECT denied: 403 Forbidden; checked 2026-10-29T07:48:32+00:00
+
+Required next action: review/save the two-host network draft in environment settings, publish the environment, then repeat live verification. No redirect destination or BC guide URL has been invented. Dynamic data inspection remains blocked.

@@ -118,5 +118,17 @@
       "detail": "Network request failed (ProxyError)",
       "response_metadata": {}
     }
+  ],
+  "network_prerequisite_diagnostics": [
+    {
+      "url": "https://www.canada.ca/robots.txt",
+      "checked_utc": "2026-10-29T07:48:32+00:00",
+      "result": "Managed proxy CONNECT denied: 403 Forbidden"
+    },
+    {
+      "url": "https://www.welcomebc.ca/robots.txt",
+      "checked_utc": "2026-10-29T07:48:32+00:00",
+      "result": "Managed proxy CONNECT denied: 403 Forbidden"
+    }
   ]
 }

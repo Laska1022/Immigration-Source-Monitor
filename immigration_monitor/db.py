@@ -64,6 +64,7 @@ DEFAULTS = {
     'timezone': 'Europe/Istanbul', 'digest_time': '09:00', 'email_enabled': False,
     'smtp_host': '', 'smtp_port': 587, 'smtp_mode': 'starttls', 'smtp_user': '',
     'email_to': '', 'email_from': '',
+    'network_cooldowns': {},
     'priority_rules': {'numbers': True, 'keywords': ['deadline', 'eligible', 'eligibility', 'not', 'open', 'closed', 'must', 'required']},
 }
 

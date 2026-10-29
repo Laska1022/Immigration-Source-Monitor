@@ -39,7 +39,7 @@ def make_digest(store,force=False,at=None):
         for e in events:
             evidence=json.loads(e['evidence'])
             body.extend([e['summary'],f"{evidence.get('title','')} — {evidence.get('agency','')}",evidence.get('entry_url') or evidence.get('url',''),
-                'Tags: '+evidence.get('tags',''), 'Previous successful observation: '+str(e['previous_observed']),
+                'Tags: '+evidence.get('tags',''), 'Previous raw SHA-256: '+str(evidence.get('old_raw_hash')), 'New raw SHA-256: '+str(evidence.get('new_raw_hash')), 'Previous successful observation: '+str(e['previous_observed']),
                 'Detected: '+e['detected'], 'Publication: '+str(evidence.get('publication','not stated')),
                 'Modified: '+str(evidence.get('modified','not stated')),evidence.get('effective_wording',''),
                 'Review aids (not legal conclusions): '+(e['priority'] or 'none'),
