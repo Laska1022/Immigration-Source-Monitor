@@ -10,14 +10,13 @@ Continuation branch: `codex/immigration-monitor`. Statuses: not started / in pro
 | P04 | CLI scheduling, health transitions, digest and SMTP queue | P02 | Catch-up/lock/dedup/coverage tests; opt-in Windows scripts | completed |
 | P05 | Backup/restore and security validation | P03,P04 | Round-trip evidence/settings; unsafe archives rejected | completed |
 | P06 | Starter-source verification and deterministic demo | P02,P03,P04 | All nine live layouts/data verified; BC guides discovered for approval; fictional demo passes | in progress |
+| P08 | Bug regression audit | P02,P03 | Reproduce and fix stale-source and guide-replacement issues with regression checks | in progress |
 | P07 | Release validation and operator documentation | P05,P06 | Full tests/local HTTP/docs complete; live and Windows acceptance explicitly verified | in progress |
 
 Scope remains the complete PROJECT_SPEC. “Could not check” never becomes “No change.” Windows execution and real SMTP delivery remain unverified without their respective runtime/credentials.
 
 ## Current evidence (2026-10-29 UTC)
 
-The user published unrestricted public access. Runtime policy is enforced and official sites now respond; the proxy blocker is resolved. The virtualenv restored successfully. This continuation starts from verified remote f1db6b2 and changes no environment settings.
+Resumed remote `29a4871` by fast-forward; its 59-test baseline passed. The previous live report (09:50 UTC) remains eight successful captures and Express Entry uncertain; actual HTML/data inspection is recorded in LIVE_SOURCE_NOTES. This task's runtime reports restricted access and a 12:27:02 UTC probe failed with proxy CONNECT 403. No environment settings were changed and historical live evidence was not overwritten.
 
-P01–P05 remain implemented. Current suite: **59 passed**, with HTTP smoke and fictional demo passing. P06 live results: **8 of 9 fetch/extraction passes**, Express Entry uncertain; command exits 1. Real HTML enabled fixes for the updates-table timeout, feedback-widget false warning, IEC marker and BC scopes omitting inline content. Offline integration replay gives eight baselines then eight unchanged results, while Express Entry stays uncertain. The two requested guide URLs are discovered but pending approval; PDFs are unverified.
-
-Remaining P06 work: integrate the observed Express Entry JSON source with complete immutable evidence and failure-safe validation; rerun live checks; obtain guide approval and verify the PDFs; complete remaining live acceptance. LIVE_SOURCE_NOTES records endpoint/schema evidence and required existing-source adjustments. P07 awaits these checks and Windows execution. Optional real SMTP acceptance remains unrun.
+P06: Express Entry compound capture is implemented, with complete HTML/JSON evidence, unconditional data checks, schema/reference validation, bounded extraction and history-preserving failures. **84 tests pass**, including 25 adapter tests. Live adapter acceptance and user-approved BC guide PDF checks remain pending. P07 still needs Windows and final live acceptance; real SMTP remains unrun. P08 is the next independent task while live access is blocked.

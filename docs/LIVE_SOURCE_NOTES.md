@@ -31,7 +31,7 @@ The official BC documents page directly links:
 
 The source labels both as PDF documents. PDF contents, redirects, extraction quality, and current guide versions have not yet been live-verified. Checking the corrected documents source discovers them as pending candidates. Approve each desired candidate in Sources & health before enabling independent monitoring. Other guide links on that page must not be mistaken for the two requested Skills Immigration guides.
 
-## Next implementation: Express Entry data
+## Observed Express Entry data (previous live task)
 
 The fetched official page contains `data-wb-json` and `data-wb-jsonmanager` pointing to:
 
@@ -46,3 +46,9 @@ Implement bounded support that validates the page's endpoint reference and the d
 59 deterministic tests and the six-screen loopback HTTP smoke pass. A separate offline integration replay of the fetched HTML creates eight baselines, keeps Express Entry uncertain, then records eight unchanged results for repeated identical captures. The two Skills Immigration guides remain pending with no child source added. This replay tests application integration; it is separate from live requests and proves no historical policy change.
 
 P06 remains in progress for the Express Entry adapter, approved guide verification, and further live acceptance. Windows setup, scheduler/DPAPI execution, and real SMTP delivery remain unrun. No public web preview or cloud background scheduler is installed.
+
+## Adapter implementation checkpoint
+
+`express_entry.py` now captures the referenced page and JSON on every check. A downloadable immutable ZIP stores exact bytes plus per-artifact URLs, observation times, headers and SHA-256 hashes; partial/invalid observations are retained without advancing the baseline. The bounded extractor validates round identities/dates/counts/scores, distribution completeness, and the exact previously observed endpoint, then compares static wording and stable round records together. It retains extra JSON fields. Reordering rounds does not create false content changes. Page-only ETags cannot hide JSON edits.
+
+Current task validation: 25 adapter fixture tests, 84 total tests. This runtime is restricted and the 12:27:02 UTC probe received proxy CONNECT 403. Thus the adapter has **no live acceptance yet**; the documented numeric/schema assumptions may conservatively reject actual records until verified. No prior successful live report or guide-approval requirement was replaced.

@@ -2,7 +2,7 @@
 
 A local evidence desk for official Canadian immigration sources. It records **what was observed**, keeps previous versions, and makes failed checks visible. It does not give legal advice, decide eligibility, or store client records.
 
-**Current delivery:** working local application with 59 deterministic tests and a fictional demo. Live fetching/extraction passed for eight of the nine starter sources on 2026-10-29; Express Entry rounds remain uncertain until the observed official JSON data is integrated. Windows scripts and real SMTP delivery have not been executed on Windows or against an email provider. See [validation](docs/VALIDATION.md), [live verification](docs/source-verification.md), and [limitations](docs/LIMITATIONS.md). Existing installations need the three source-setting adjustments in [live source notes](docs/LIVE_SOURCE_NOTES.md); setup preserves saved source edits.
+**Current delivery:** working local application with 84 deterministic tests and a fictional demo. Live fetching/extraction passed for eight of the nine starter sources on 2026-10-29; The Express Entry page-plus-JSON adapter is now implemented and fixture-tested; its live acceptance remains pending because this task runtime returns proxy CONNECT 403. The earlier eight-page live evidence is retained. Windows scripts and real SMTP delivery have not been executed on Windows or against an email provider. See [validation](docs/VALIDATION.md), [live verification](docs/source-verification.md), and [limitations](docs/LIMITATIONS.md). Existing installations need the three source-setting adjustments in [live source notes](docs/LIVE_SOURCE_NOTES.md); setup preserves saved source edits.
 
 ## Windows quick start
 
@@ -41,7 +41,7 @@ Use listing scope only for a list/index whose entries are links in list items, t
 
 New announcement entries are captured one hop from an approved host; at most five article captures are attempted per run. Capture failures remain visible in onboarding and digests. Linked instructions become candidates, not an automatic crawl. BC Program/Application Guide links are discovered from the documents index when it can be fetched; **approve them in the candidate list** before monitoring. Each approved guide receives its own scheduled checks. Replacement links are visible on the index and require approval for the new document; no earlier version is claimed for it.
 
-Unexpected redirects retain the baseline and show the observed final URL in History. Verify that destination and its official ownership, then edit the source URL explicitly. A 404 means unavailable, not that a policy was withdrawn. Unverified dynamic data is marked uncertain; this release does not silently substitute a guessed API endpoint or pretend a static shell covers dynamic rounds.
+Unexpected redirects retain the baseline and show the observed final URL in History. Verify that destination and its official ownership, then edit the source URL explicitly. A 404 means unavailable, not that a policy was withdrawn. Express Entry observations retain the exact HTML and JSON in a downloadable ZIP with a hash/time manifest. Both are fetched on every check; malformed data, missing historical rounds, or changed endpoint references retain the baseline. Distribution keys are preserved verbatim without interpretation. Unverified dynamic data is marked uncertain; this release does not silently substitute a guessed API endpoint or pretend a static shell covers dynamic rounds.
 
 ### Adjust noise without losing changes
 

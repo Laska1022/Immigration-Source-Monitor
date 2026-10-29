@@ -4,7 +4,7 @@ Environment: Linux, Python 3.12.14. Tests use isolated temporary SQLite database
 
 | Check | Actual result |
 |---|---|
-| `python -m pytest -q` | **59 passed**, 0 failed, 0 skipped; current suite completed |
+| `python -m pytest -q` | **84 passed**, 0 failed, 0 skipped; current suite completed |
 | Hash-locked dependency install | Passed using `pip install --no-cache-dir --require-hashes -r requirements.txt` |
 | `python -m pip check` | Passed: no broken requirements |
 | Saved cloud install script | Re-executed successfully on resumption: hash-locked install, dependency check, all 55 tests, six-screen HTTP smoke, and external runtime initialization |
@@ -24,6 +24,12 @@ The user published the cloud environment with unrestricted public access. Curren
 
 The 1,375-row IRCC table now extracts in about two seconds within unchanged limits; four added regression cases bring pytest to 59 passing tests. The six-screen HTTP smoke passes. An offline application replay of captured public HTML created eight baselines then eight unchanged results; Express Entry stayed uncertain, and both requested BC guides remained pending without child sources. This replay is distinct from the live report. The official Express Entry JSON endpoint returned HTTP 200 with 454 rounds, but no adapter exists yet. Guide PDFs, Windows execution and SMTP remain unverified.
 
+## Express Entry adapter continuation
+
+Resumed the published `29a4871` checkpoint; its 59-test baseline passed. Added 25 fictional fixture tests: exact page/JSON artifacts and hashes/times, unchanged HTML with changed data, numeric/date/score/distribution and historical edits, reversions, ordering/new rounds, missing/invalid fields, endpoint changes, failures/304s, missing historical rounds, unknown dynamic content, bounded extraction, raw ZIP download and backup round-trip. Full result: **84 passed**.
+
+At 2026-10-29T12:27:02+00:00 this task's reviewed managed proxy returned CONNECT 403 for the Express Entry fetch prerequisite. Current runtime observations report enforced restricted access with no custom official hosts. This differs from the previous task's unrestricted runtime. The previous successful live-source report is retained unchanged; no new live adapter success is claimed. No environment settings were changed. The adapter's strict field assumptions must be checked against actual current data when access is available.
+
 ## Deterministic acceptance coverage
 
 ### Historical cloud resumption — 2026-10-29 08:57 UTC (superseded above)
@@ -40,6 +46,6 @@ The local HTTP smoke is deliberately separate from pytest because sandboxed runn
 
 ## Interpretation of readiness
 
-The local application and independent checker are implemented and tested against deterministic evidence. The original **live Windows acceptance goal is not fully verified**: Express Entry data integration, approved BC guide PDF verification, and Windows execution remain pending. No mocked success is counted as live-source coverage. See [LIMITATIONS](LIMITATIONS.md) and [source verification](source-verification.md).
+The local application and independent checker are implemented and tested against deterministic evidence. The original **live Windows acceptance goal is not fully verified**: live Express Entry adapter validation, approved BC guide PDF verification, and Windows execution remain pending. No mocked success is counted as live-source coverage. See [LIMITATIONS](LIMITATIONS.md) and [source verification](source-verification.md).
 
 Reusable cloud `install_script` and `start_skill` were previously saved. The user has now published the environment; the replacement instance restored the virtualenv and passed dependency checks/tests. This later Git checkpoint is not assumed to be in that earlier filesystem snapshot. No further environment settings were edited or published by the agent. The app's actual long-term host is the user's local computer, with explicit scheduling, not this development task.

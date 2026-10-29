@@ -4,6 +4,7 @@ from pathlib import Path
 from .db import now, digest_hash
 from .extract import bounded_extract
 from .fetch import Fetcher, CheckError
+from .express_entry import prepare_response, handles
 
 
 def verify_sources(output):
@@ -17,12 +18,13 @@ def verify_sources(output):
         try:
             r=fetcher.fetch(source['url'])
             item.update(final_url=r.url,http_status=r.status,redirects=r.redirects,raw_sha256=digest_hash(r.body))
+            prepare_response(r,source,fetcher)
             ex=bounded_extract(r.body,r.url,source,r.headers.get('content-type',''))
             item.update(result='fetch and extraction passed',extracted_characters=len(ex.text),limitations=ex.warnings)
             if 'documents' in source['url']:
                 item['guide_candidates']=[link for link in ex.links if 'guide' in link['title'].lower()]
-            if 'rounds-invitations' in source['url']:
-                item['limitations'].append('Dynamic rounds data requires separate verification; generic HTML success does not establish coverage of each invitation round.')
+            if handles(source['url']):
+                item.update(method='Full official HTML plus referenced JSON; bounded compound extraction',artifacts=ex.metadata['artifacts'],round_count=len(ex.metadata['round_ids']))
         except CheckError as exc:
             item.update(result=exc.status,detail=str(exc),response_metadata=exc.metadata)
             item['limitations'].append('No verified current content or replacement URL. A failed prerequisite does not establish no change.')

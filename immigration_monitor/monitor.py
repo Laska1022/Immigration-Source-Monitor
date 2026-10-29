@@ -9,6 +9,7 @@ from filelock import FileLock, Timeout
 from .db import now, digest_hash
 from .extract import PARSER_VERSION, EFFECTIVE_UNKNOWN, bounded_extract, config_hash
 from .fetch import CheckError, Fetcher, canonical
+from .express_entry import handles as compound_source, prepare_response
 
 UNHEALTHY={'failed or blocked','extraction uncertain','source unavailable or redirected'}
 
@@ -67,6 +68,7 @@ def save_version(db,source,r,ex,stamp,uncertain=None):
     meta={'response':{k:v for k,v in r.headers.items() if k in ['content-type','etag','last-modified','content-length','date']},
         'redirects':r.redirects,'entries':ex.entries if ex else [],'warnings':ex.warnings if ex else [uncertain],
         'format':ex.format if ex else 'unknown','valid':bool(ex)}
+    meta.update(r.capture_metadata)
     if ex: meta.update(ex.metadata)
     text=ex.text if ex else ''
     cur=db.execute('INSERT INTO versions(source_id,retrieved,original_url,final_url,raw,raw_hash,text,text_hash,metadata,config_hash,extraction_version) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
@@ -102,18 +104,23 @@ def check_one(store,source,fetcher,extractor=bounded_extract):
     if source.get('retry_until') and source['retry_until']>stamp: return 'deferred by Retry-After'
     headers={}
     full_due=not source['full_checked'] or source['full_checked']<future(-86400,stamp)
-    if old and not full_due and old['config_hash']==config_hash(source):
+    if old and not full_due and old['config_hash']==config_hash(source) and not compound_source(source['url']):
         if source['etag']: headers['If-None-Match']=source['etag']
         elif source['http_modified']: headers['If-Modified-Since']=source['http_modified']
     rules=store.settings()['priority_rules']
     try:
         r=fetcher.fetch(source['url'],headers)
+        prepare_response(r,source,fetcher)
         if r.status==304:
             if not old or not headers or old['final_url']!=r.url:
                 raise CheckError('304 without a valid corresponding conditional baseline','extraction uncertain')
             ex=None; status='checked successfully; unchanged'
         else:
             ex=extractor(r.body,r.url,source,r.headers.get('content-type',''))
+            if old and old['config_hash']==config_hash(source) and ex.format=='express-entry-bundle':
+                previous_ids=set(json.loads(old['metadata']).get('round_ids',[]))
+                if previous_ids-set(ex.metadata['round_ids']):
+                    raise CheckError('Express Entry historical rounds disappeared; incomplete data or an archive change requires review','extraction uncertain')
             if old and old['config_hash']==config_hash(source) and len(ex.text)<len(old['text'])*0.45:
                 raise CheckError('Suspiciously incomplete extraction: more than 55% of previous text missing; inspect saved capture before adjusting scope','extraction uncertain')
             status='baseline created' if old is None else 'checked successfully; unchanged'

@@ -13,6 +13,7 @@ from pypdf import PdfReader
 
 from .db import digest_hash
 from .fetch import CheckError, MAX_BYTES, canonical
+from .express_entry import handles, ADAPTER_VERSION, MIME, extract_bundle
 
 PARSER_VERSION='html-3/pdf-1/feed-1'
 EFFECTIVE_UNKNOWN='Effective date not established from the monitored content.'
@@ -29,7 +30,7 @@ class Extracted:
 
 
 def config_hash(source):
-    return digest_hash(json.dumps({k:source.get(k,'') for k in ['scope','selector','expected','ignore_selectors','url']},sort_keys=True)+PARSER_VERSION)
+    return digest_hash(json.dumps({k:source.get(k,'') for k in ['scope','selector','expected','ignore_selectors','url']},sort_keys=True)+PARSER_VERSION+(ADAPTER_VERSION if handles(source.get('url','')) else ''))
 
 
 def clean(s):
@@ -43,7 +44,7 @@ def date_metadata(text):
     return {'effective_wording':'\n'.join(effective[:10]) or EFFECTIVE_UNKNOWN}
 
 
-def html_extract(raw,url,source):
+def html_extract(raw,url,source,verified_rounds=False):
     soup=BeautifulSoup(raw,'html.parser')
     visible=clean(soup.get_text(' ',strip=True))
     title=clean(soup.title.get_text()) if soup.title else ''
@@ -79,6 +80,13 @@ def html_extract(raw,url,source):
             try:
                 for node in root.select(selector.strip()): node.decompose()
             except Exception as exc: raise CheckError('Invalid noise selector','extraction uncertain') from exc
+    if verified_rounds:
+        # Only called after the exact official page/data pair and complete JSON
+        # have been validated. The full JSON follows the static text in the result.
+        for node in root.select('[data-json-replace],[data-json-append]'):
+            if not clean(node.get_text(' ',strip=True)):node.append('[Captured in official JSON data below]')
+        for node in root.select('tbody'):
+            if not clean(node.get_text(' ',strip=True)):node.append('[Captured in official JSON data below]')
     # Data placeholders can coexist with long static guidance. Reject those too.
     for placeholder in root.select('[data-ajax-replace],[data-ajax-append],[data-json],tbody,#app,#root'):
         if len(clean(placeholder.get_text(' ',strip=True)))<30:
@@ -86,7 +94,7 @@ def html_extract(raw,url,source):
     for placeholder in root.select('[data-json-replace],[data-json-append]'):
         if not clean(placeholder.get_text(' ',strip=True)):
             raise CheckError('Dynamic JSON field has no verified content; inspect the official public data request','extraction uncertain')
-    if 'express-entry/rounds-invitations' in url:
+    if 'express-entry/rounds-invitations' in url and not verified_rounds:
         populated=any(len(row.find_all('td'))>=3 and re.search(r'\d',row.get_text()) for row in root.select('tbody tr'))
         if not populated:
             raise CheckError('Express Entry rounds data has not been verified; static surrounding guidance is not round coverage','extraction uncertain')
@@ -184,6 +192,7 @@ def feed_extract(raw,url):
 
 def extract(raw,url,source,content_type=''):
     if len(raw)>MAX_BYTES: raise CheckError('Input too large','extraction uncertain')
+    if content_type==MIME and handles(url):return extract_bundle(raw,url,source)
     if raw.startswith(b'%PDF'): return pdf_extract(raw)
     if 'pdf' in content_type: raise CheckError('Expected PDF signature is missing','extraction uncertain')
     if any(t in content_type for t in ('rss','atom','xml')) or raw.lstrip().startswith(b'<?xml'):

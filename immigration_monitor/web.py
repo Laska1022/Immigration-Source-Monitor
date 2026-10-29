@@ -217,7 +217,7 @@ def create_app(store=None):
         if not version:abort(404)
         if kind=='text':data=version['text'].encode();name=f'evidence-{id}.txt';mime='text/plain'
         elif kind=='raw':
-            data=version['raw'];name=f'evidence-{id}'+('.pdf' if data.startswith(b'%PDF') else '.bin');mime='application/octet-stream'
+            data=version['raw'];name=f'evidence-{id}'+('.pdf' if data.startswith(b'%PDF') else '.zip' if data.startswith(b'PK\x03\x04') else '.bin');mime='application/octet-stream'
         elif kind=='metadata':data=json.dumps({k:v for k,v in version.items() if k not in ['raw','text']},indent=2).encode();name=f'evidence-{id}.json';mime='application/json'
         else:abort(404)
         return send_file(io.BytesIO(data),as_attachment=True,download_name=name,mimetype=mime)

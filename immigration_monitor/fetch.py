@@ -69,6 +69,7 @@ class Response:
     body: bytes = b''
     headers: dict = field(default_factory=dict)
     redirects: list = field(default_factory=list)
+    capture_metadata: dict = field(default_factory=dict)
 
 
 def retry_after(value):
