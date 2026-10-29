@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=77,<81"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "immigration-source-monitor"
+version = "0.1.0"
+description = "Local evidence-preserving official Canadian immigration source monitor"
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.in"]}
+
+[tool.setuptools.package-data]
+immigration_monitor = ["templates/*.html", "static/*.css", "starter_sources.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

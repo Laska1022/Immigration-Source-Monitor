@@ -1,0 +1,9 @@
+# Immigration Source Monitor
+
+Read [spec](docs/PROJECT_SPEC.md), [plan](docs/PLAN.md), and [handoff](docs/HANDOFF.md) before changing code. Resume the latest published `codex/immigration-monitor` checkpoint; inspect status/remotes, fetch, and inspect recent commits first. Never merge to the stable branch without user approval, force-push, or overwrite unrelated work. Only one writing agent operates at a time.
+
+Python 3.11+, Flask, SQLite; local Windows runtime, no Docker/cloud/AI dependency. Use the existing checkout (cloud tasks are already isolated; no worktree unless requested). Runtime data lives outside the repository. Install with `python -m pip install -r requirements.txt`; test with `python -m pytest -q`; run with `python -m immigration_monitor serve`. See README for commands and Windows setup.
+
+Critical invariant: **could not check never means unchanged**. Only valid comparable captures advance a baseline. Evidence is immutable; annotations are separate. Detection, publication, modification, and effective dates are different. Content and links are untrusted. Fetch only approved public destinations, validate every redirect, respect robots/access controls, and never bypass TLS verification. No legal/eligibility conclusions. Do not store client records or credentials in Git.
+
+Use deterministic tests; optional live checks are separate. Never claim Windows, email, or live coverage without evidence. Maintain stable task IDs and actual test results. After each meaningful unit: test, update PLAN and HANDOFF, commit together, check remote advancement, push, verify remote SHA. A local commit is not publication. Mark NEEDS_PUBLISHING when blocked and provide an export/manual publish path. Before ending, publish a checkpoint and record exact next steps and limitations. Do not replace working architecture just because another agent resumes.
