@@ -96,6 +96,8 @@ https://www.welcomebc.ca/immigrate-to-b-c/for-employers
 
 ## Network prerequisite diagnosis
 
+Latest resumption check at **2026-10-29 08:57:26 UTC**: both official-host robots HEAD probes again received managed-proxy CONNECT 403 Forbidden. This does not refresh the nine per-source attempts above or establish robots rules. The enforced runtime policy excludes both hosts. A new draft save confirmed complete installation/startup instructions and custom domain additions for `www.canada.ca` and `www.welcomebc.ca`, with publication required. Apply those settings before retrying live verification; keep TLS/access controls intact.
+
 The initial failures were investigated separately using read-only robots requests through the configured managed proxy. No site robots policy or page content could be read. The runtime allowlist still excludes these hosts; saving a draft does not apply it.
 
 - https://www.canada.ca/robots.txt — Managed proxy CONNECT denied: 403 Forbidden; checked 2026-10-29T07:48:32+00:00

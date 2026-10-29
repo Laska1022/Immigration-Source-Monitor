@@ -14,6 +14,10 @@ Important code: `db.py` schema; `fetch.py` network controls; `extract.py` bounde
 
 ## Verified results
 
+Latest resumption (2026-10-29): remote lookup/fetch confirmed published `fdddae33273798442d8187d8d41e3239711fd7b7` before work. Fresh hash-locked install, `pip check`, all 55 tests, and six-screen HTTP smoke passed; the saved install script was exercised successfully. Repeated initialization at `/workspace/ism-runtime` retained exactly nine sources, and the initialized UI returned expected inbox/source HTTP responses. At 08:57:26 UTC both official-host robots probes still returned proxy CONNECT 403. No new live content was obtained, no dynamic endpoint was guessed, and P06 remains blocked. This checkpoint updates setup/validation evidence only; it does not complete P06/P07. Full details are in VALIDATION.
+
+Current cloud paths supersede the earlier environment notes below: Python is `/workspace/Immigration-Source-Monitor/.venv/bin/python`; runtime data is `/workspace/ism-runtime`. The current draft saves complete tested installation and startup instructions plus the two official-host network additions. The save confirmed publication is required; it has not applied the network policy or verified restoration in a new task.
+
 - `python -m pytest -q`: **55 passed**, no failures/skips (Linux Python 3.12.14).
 - Hash-locked pip install and `pip check`: passed. Saved environment install script was exercised successfully (then-current 53 tests); the final expanded suite is 55 passing tests.
 - `python scripts/smoke-local.py`: passed fresh fictional demo, six actual HTTP screens, security headers, attachment download, own-server cleanup.
