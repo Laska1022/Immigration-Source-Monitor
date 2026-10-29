@@ -66,6 +66,14 @@ def html_extract(raw,url,source):
         if source.get('scope')=='selected section': raise CheckError('Selected section requires a CSS selector','extraction uncertain')
         root=soup.find('main') or soup.find(attrs={'role':'main'}) or soup.find('article')
         if not root: raise CheckError('No reliable main/article content found; configure a section selector','extraction uncertain')
+    # Data placeholders can coexist with long static guidance. Reject those too.
+    for placeholder in root.select('[data-ajax-replace],[data-ajax-append],[data-json],tbody,#app,#root'):
+        if len(clean(placeholder.get_text(' ',strip=True)))<30:
+            raise CheckError('Dynamic data placeholder has no verified content; inspect the official public data request','extraction uncertain')
+    if 'express-entry/rounds-invitations' in url:
+        populated=any(len(row.find_all('td'))>=3 and re.search(r'\d',row.get_text()) for row in root.select('tbody tr'))
+        if not populated:
+            raise CheckError('Express Entry rounds data has not been verified; static surrounding guidance is not round coverage','extraction uncertain')
     for node in root.select('script,style,noscript,nav,footer,form,iframe,object,embed,svg,#wb-dtmd,.date-modified,.cookie-banner,[role="navigation"]'):
         node.decompose()
     for selector in source.get('ignore_selectors','').splitlines():

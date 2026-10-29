@@ -18,8 +18,10 @@ def future(seconds,stamp=None):
 
 
 def changed_excerpts(old,new):
+    if len(old)+len(new)>200000:
+        return old[:12000],new[:12000],['Large monitored content (excerpts truncated; compare saved originals)']
     oldlines=old.splitlines(); newlines=new.splitlines(); removed=[];added=[];sections=[]
-    matcher=difflib.SequenceMatcher(None,oldlines,newlines,autojunk=False)
+    matcher=difflib.SequenceMatcher(None,oldlines,newlines,autojunk=True)
     for tag,a,b,c,d in matcher.get_opcodes():
         if tag=='equal': continue
         removed.extend(oldlines[max(0,a-1):min(len(oldlines),b+1)])
@@ -31,8 +33,9 @@ def changed_excerpts(old,new):
 
 def priority(old,new,rules):
     # Only changed tokens, not unchanged context, influence review aids.
+    if len(old)+len(new)>200000:return 'Large content change: manual review required; automatic keyword analysis omitted'
     a=old.split();b=new.split();tokens=[]
-    for tag,i,j,k,l in difflib.SequenceMatcher(None,a,b,autojunk=False).get_opcodes():
+    for tag,i,j,k,l in difflib.SequenceMatcher(None,a,b,autojunk=True).get_opcodes():
         if tag!='equal': tokens.extend(a[i:j]+b[k:l])
     changed=' '.join(tokens); hits=[]
     if rules.get('numbers') and re.search(r'\d',changed): hits.append('Changed number/date/amount')
@@ -198,7 +201,7 @@ def run_checks(store,source_id=None,force=False,fetcher=None,extractor=bounded_e
 
 def coverage(store,at=None):
     stamp=at or now(); rows=store.rows('SELECT * FROM sources WHERE removed=0 AND paused=0')
-    return {'checked_successfully':sum(bool(s['last_success']) and s['health'] not in UNHEALTHY for s in rows),
+    return {'checked_successfully':sum(bool(s['last_success']) and s['health'] in ('baseline created','checked successfully; unchanged','change detected','internal rebaseline') for s in rows),
         'failed':sum(s['health'] in UNHEALTHY for s in rows),
         'overdue':sum(not s['next_due'] or s['next_due']<stamp for s in rows),
         'never_checked':sum(s['last_attempt'] is None for s in rows),'total':len(rows)}

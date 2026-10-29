@@ -45,7 +45,7 @@ def validate_url(url, approved, resolve=True):
             raise CheckError('Host is not explicitly approved: '+host)
         try:
             ip = ipaddress.ip_address(host)
-            if not ip.is_global:
+            if not ip.is_global or ip.is_multicast or ip.is_reserved:
                 raise ValueError()
         except ValueError:
             if host.replace('.','').isdigit() or ':' in host or host in ('localhost','metadata.google.internal'):
@@ -53,7 +53,7 @@ def validate_url(url, approved, resolve=True):
         if not resolve:
             return host, []
         addresses = sorted({a[4][0] for a in socket.getaddrinfo(host,p.port or (443 if p.scheme=='https' else 80),type=socket.SOCK_STREAM)})
-        if not addresses or any(not ipaddress.ip_address(ip).is_global for ip in addresses):
+        if not addresses or any(not ipaddress.ip_address(ip).is_global or ipaddress.ip_address(ip).is_multicast or ipaddress.ip_address(ip).is_reserved for ip in addresses):
             raise CheckError('DNS resolved to a non-public address')
         return host, addresses
     except CheckError:
@@ -89,8 +89,12 @@ class Fetcher:
         self.last = {}
         self.robots = {}
 
+    def _validate(self, url):
+        trusted = os.environ.get('ISM_TRUSTED_PROXY') == '1' and bool(getproxies().get(urlsplit(url).scheme))
+        return validate_url(url, self.approved, resolve=not trusted)
+
     def _request(self, url, headers):
-        host, ips = validate_url(url,self.approved)
+        host, ips = self._validate(url)
         elapsed = time.monotonic()-self.last.get(host,0)
         if elapsed < self.delay:
             time.sleep(self.delay-elapsed)
@@ -164,7 +168,7 @@ class Fetcher:
         base={'User-Agent':USER_AGENT,'Accept-Encoding':'identity','Accept':'text/html, application/pdf, application/atom+xml, application/rss+xml, application/json;q=0.8'}
         base.update(headers or {})
         for hop in range(6):
-            validate_url(current,self.approved)
+            self._validate(current)
             self._robots_allowed(current)
             for attempt in range(2):
                 try:
@@ -176,7 +180,7 @@ class Fetcher:
             if r.status in (301,302,303,307,308):
                 target=canonical(urljoin(current,r.headers.get('location','')))
                 redirects.append({'from':current,'to':target,'status':r.status})
-                try: validate_url(target,self.approved)
+                try: self._validate(target)
                 except CheckError as exc:
                     raise CheckError('Unapproved or unsafe redirect; baseline retained','source unavailable or redirected',{'redirects':redirects}) from exc
                 if urlsplit(current).scheme=='https' and urlsplit(target).scheme!='https':
