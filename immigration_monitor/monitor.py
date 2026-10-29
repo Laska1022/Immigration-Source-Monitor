@@ -66,7 +66,7 @@ def event(db,source,kind,stamp,old_id,new_id,summary,old_text='',new_text='',met
 
 def save_version(db,source,r,ex,stamp,uncertain=None):
     meta={'response':{k:v for k,v in r.headers.items() if k in ['content-type','etag','last-modified','content-length','date']},
-        'redirects':r.redirects,'entries':ex.entries if ex else [],'warnings':ex.warnings if ex else [uncertain],
+        'redirects':r.redirects,'entries':ex.entries if ex else [],'links':ex.links if ex else [],'warnings':ex.warnings if ex else [uncertain],
         'format':ex.format if ex else 'unknown','valid':bool(ex)}
     meta.update(r.capture_metadata)
     if ex: meta.update(ex.metadata)
@@ -76,30 +76,59 @@ def save_version(db,source,r,ex,stamp,uncertain=None):
     return cur.lastrowid
 
 
-def discover(db,source,ex,stamp,baseline,new_keys):
+def discover(db,source,ex,stamp,baseline,new_keys,current_version=None):
     for entry in ex.entries:
         db.execute('INSERT OR IGNORE INTO entries VALUES (?,?,?,?,?,?)',(source['id'],entry['key'],entry['title'],entry['url'],entry['publication'],stamp))
     approved={r[0] for r in db.execute('SELECT host FROM hosts')}
+    # Compare consecutive observations, not candidate existence. This preserves
+    # link reversions and avoids suppressing an alert when discovery ran first.
+    previous=db.execute('SELECT text,metadata FROM versions WHERE id=?',(source['baseline_id'],)).fetchone() if source['baseline_id'] else None
+    if previous and not baseline:
+        old_meta=json.loads(previous['metadata'])
+        for child in db.execute('SELECT * FROM sources WHERE parent_id=? AND removed=0',(source['id'],)).fetchall():
+            label=child['link_label']
+            if not label:continue
+            targets={link['url'] for link in ex.links if link['title']==label}
+            if 'links' in old_meta:
+                old_targets={link['url'] for link in old_meta['links'] if link['title']==label}
+            else:
+                # Older immutable captures predate structured links metadata.
+                old_targets=set(re.findall(re.escape(label)+r'\s*\[([^\]]+)\]',previous['text']))
+            if targets==old_targets:continue
+            event(db,source,'download_link_changed',stamp,source['baseline_id'],current_version,
+                  'Download link changed for '+label+'; review the observed destinations.',
+                  '\n'.join(sorted(old_targets)) or '(No matching link in previous observation)',
+                  '\n'.join(sorted(targets)) or '(No matching link in current observation)',meta={**ex.metadata,'warnings':ex.warnings})
+            for target in targets-old_targets:
+                if urlsplit(target).hostname in approved and target!=child['url']:
+                    db.execute('INSERT OR IGNORE INTO candidates(parent_id,title,url,kind,discovered) VALUES (?,?,?,?,?)',
+                               (source['id'],label,target,'replacement guide',stamp))
     for link in ex.links:
-        if urlsplit(link['url']).hostname not in approved: continue
+        if urlsplit(link['url']).hostname not in approved:continue
         guide=bool(re.search(r'(skills immigration.*guide|application guide|program guide)',link['title'],re.I))
         article=source['source_type']=='announcement' and link['url'] in new_keys and not baseline
         if guide or article:
             publication=next((e['publication'] for e in ex.entries if e['url']==link['url']),None)
             db.execute('INSERT OR IGNORE INTO candidates(parent_id,title,url,kind,publication,discovered) VALUES (?,?,?,?,?,?)',
                 (source['id'],link['title'],link['url'],'guide' if guide else 'announcement',publication,stamp))
-    # A changed link for an approved guide is evidence even if the old PDF URL still works.
-    for child in db.execute('SELECT * FROM sources WHERE parent_id=? AND removed=0',(source['id'],)).fetchall():
-        for link in ex.links:
-            if child['link_label'] and link['title']==child['link_label'] and link['url']!=child['url']:
-                exists=db.execute('SELECT 1 FROM candidates WHERE parent_id=? AND url=?',(source['id'],link['url'])).fetchone()
-                if not exists:
-                    db.execute('INSERT INTO candidates(parent_id,title,url,kind,discovered) VALUES (?,?,?,?,?)',(source['id'],link['title'],link['url'],'replacement guide',stamp))
-                    event(db,source,'download_link_changed',stamp,source['baseline_id'],None,'Download link changed; approval needed for newly discovered document.',child['url'],link['url'])
+
+
+def superseded(source,current):
+    return config_hash(source)!=config_hash(current) or source['baseline_id']!=current['baseline_id']
+
+
+def record_superseded(db,source,response,attempted,stamp,detail=''):
+    status='configuration changed; awaiting check'
+    explanation='Check superseded by a source edit or newer baseline; current source state was preserved.'
+    if detail:explanation+=' '+detail
+    version=save_version(db,source,response,None,stamp,explanation) if response and response.body else None
+    db.execute('INSERT INTO attempts(source_id,attempted,status,detail,version_id) VALUES (?,?,?,?,?)',
+               (source['id'],attempted,status,explanation,version))
+    return status
 
 
 def check_one(store,source,fetcher,extractor=bounded_extract):
-    stamp=now(); old=store.one('SELECT * FROM versions WHERE id=?',(source['baseline_id'],)) if source['baseline_id'] else None
+    stamp=now(); attempted=stamp; old=store.one('SELECT * FROM versions WHERE id=?',(source['baseline_id'],)) if source['baseline_id'] else None
     r=None; version_id=None
     if source.get('retry_until') and source['retry_until']>stamp: return 'deferred by Retry-After'
     headers={}
@@ -124,7 +153,11 @@ def check_one(store,source,fetcher,extractor=bounded_extract):
             if old and old['config_hash']==config_hash(source) and len(ex.text)<len(old['text'])*0.45:
                 raise CheckError('Suspiciously incomplete extraction: more than 55% of previous text missing; inspect saved capture before adjusting scope','extraction uncertain')
             status='baseline created' if old is None else 'checked successfully; unchanged'
+        stamp=now()  # completed observation, not the earlier request start
         with store.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            current=dict(db.execute('SELECT * FROM sources WHERE id=?',(source['id'],)).fetchone())
+            if superseded(source,current):return record_superseded(db,source,r,attempted,stamp)
             if ex:
                 version_id=save_version(db,source,r,ex,stamp)
                 baseline=old is None
@@ -156,32 +189,39 @@ def check_one(store,source,fetcher,extractor=bounded_extract):
                         status='change detected'
                     elif oldmeta.get('modified')!=ex.metadata.get('modified'):
                         event(db,source,'metadata_changed',stamp,old['id'],version_id,'Page-level modified date changed; substantive extracted content is unchanged.',meta=ex.metadata)
-                discover(db,source,ex,stamp,baseline or rebaseline,{e['key'] for e in new_entries})
+                discover(db,source,ex,stamp,baseline or rebaseline,{e['key'] for e in new_entries},version_id)
             if source['health'] in UNHEALTHY:
                 event(db,source,'recovered',stamp,old['id'] if old else None,version_id,'Source recovered; compared against the last valid baseline.')
             db.execute('UPDATE sources SET last_attempt=?,last_success=?,next_due=?,health=?,detail=?,baseline_id=?,etag=?,http_modified=?,full_checked=?,retry_until=NULL WHERE id=?',
-                (stamp,stamp,future(source['frequency'],stamp),status,'; '.join(ex.warnings) if ex else '',version_id or source['baseline_id'],
+                (attempted,stamp,future(current['frequency'],stamp),status,'; '.join(ex.warnings) if ex else '',version_id or source['baseline_id'],
                  r.headers.get('etag') if ex else source['etag'],r.headers.get('last-modified') if ex else source['http_modified'],stamp if ex else source['full_checked'],source['id']))
             db.execute('INSERT INTO attempts(source_id,attempted,status,detail,version_id,metadata) VALUES (?,?,?,?,?,?)',
-                (source['id'],stamp,status,'',version_id,json.dumps({'http_status':r.status,'final_url':r.url})))
+                (source['id'],attempted,status,'',version_id,json.dumps({'http_status':r.status,'final_url':r.url})))
         return status
     except Exception as exc:
         if not isinstance(exc,CheckError):exc=CheckError('Internal check failure ('+type(exc).__name__+'); baseline retained')
+        stamp=now()
         with store.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            current=dict(db.execute('SELECT * FROM sources WHERE id=?',(source['id'],)).fetchone())
+            if superseded(source,current):return record_superseded(db,source,r,attempted,stamp,str(exc))
             if r and r.body: version_id=save_version(db,source,r,None,stamp,str(exc))
             if source['health'] not in UNHEALTHY:
                 event(db,source,'unhealthy',stamp,old['id'] if old else None,version_id,'Source could not be checked: '+str(exc),meta={'warnings':[str(exc)]})
-            next_due=max(future(source['frequency'],stamp),exc.retry_at or '')
+            next_due=max(future(current['frequency'],stamp),exc.retry_at or '')
             db.execute('UPDATE sources SET last_attempt=?,next_due=?,health=?,detail=?,retry_until=? WHERE id=?',
-                (stamp,next_due,exc.status,str(exc),exc.retry_at,source['id']))
+                (attempted,next_due,exc.status,str(exc),exc.retry_at,source['id']))
             db.execute('INSERT INTO attempts(source_id,attempted,status,detail,version_id,metadata) VALUES (?,?,?,?,?,?)',
-                (source['id'],stamp,exc.status,str(exc),version_id,json.dumps(exc.metadata)))
+                (source['id'],attempted,exc.status,str(exc),version_id,json.dumps(exc.metadata)))
         return exc.status
 
 
 def capture_articles(store,fetcher,extractor=bounded_extract):
-    # One hop only. Failed article captures stay visible and retry on later scheduled runs.
-    for c in store.rows("SELECT c.* FROM candidates c JOIN sources s ON s.id=c.parent_id WHERE c.kind='announcement' AND c.capture_status!='captured' AND s.removed=0 AND s.paused=0 ORDER BY c.id LIMIT 5"):
+    # One hop only, five per run. A persistent round-robin cursor prevents a
+    # permanently blocked early batch from starving every later discovery.
+    cursor=store.settings().get('article_capture_cursor',0)
+    for c in store.rows("SELECT c.* FROM candidates c JOIN sources s ON s.id=c.parent_id WHERE c.kind='announcement' AND c.capture_status!='captured' AND s.removed=0 AND s.paused=0 ORDER BY CASE WHEN c.id>? THEN 0 ELSE 1 END,c.id LIMIT 5",(cursor,)):
+        if not store.one('SELECT id FROM sources WHERE id=? AND removed=0 AND paused=0',(c['parent_id'],)):continue
         try:
             r=fetcher.fetch(c['url'])
             ex=extractor(r.body,r.url,{'scope':'main content'},r.headers.get('content-type',''))
@@ -206,9 +246,11 @@ def capture_articles(store,fetcher,extractor=bounded_extract):
                     if urlsplit(link['url']).hostname in approved and re.search(r'(instructions|manual|guide|requirements)',link['title'],re.I):
                         db.execute('INSERT OR IGNORE INTO candidates(parent_id,title,url,kind,discovered) VALUES (?,?,?,?,?)',
                             (c['parent_id'],link['title'],link['url'],'instruction',now()))
-        except CheckError as exc:
+        except Exception as exc:
+            detail=str(exc) if isinstance(exc,CheckError) else 'Article capture failed ('+type(exc).__name__+')'
             with store.connect() as db:
-                db.execute('UPDATE candidates SET capture_status=? WHERE id=?',(str(exc),c['id']))
+                db.execute('UPDATE candidates SET capture_status=? WHERE id=?',(detail,c['id']))
+        store.set_settings({'article_capture_cursor':c['id']})
 
 
 def run_checks(store,source_id=None,force=False,fetcher=None,extractor=bounded_extract,lock_timeout=0):
@@ -219,7 +261,10 @@ def run_checks(store,source_id=None,force=False,fetcher=None,extractor=bounded_e
             if source_id is not None: sql+=' AND id=?';params.append(source_id)
             elif not force: sql+=' AND (next_due IS NULL OR next_due<=?)';params.append(now())
             results=[]
-            for source in store.rows(sql+' ORDER BY id',params):
+            for selected in store.rows(sql+' ORDER BY id',params):
+                # The user may edit or pause later sources while earlier ones fetch.
+                source=store.one('SELECT * FROM sources WHERE id=? AND removed=0 AND paused=0',(selected['id'],))
+                if not source:continue
                 results.append((source['id'],check_one(store,source,fetcher,extractor)))
             capture_articles(store,fetcher,extractor)
             return {'status':'completed','sources':results}

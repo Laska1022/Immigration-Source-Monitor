@@ -135,6 +135,8 @@ def validate_data(raw):
         for key in required:
             if isinstance(row[key],bool) or not isinstance(row[key],(str,int)) or not str(row[key]).strip():
                 raise uncertain('Express Entry round contains an invalid required value: '+key)
+        if any(not isinstance(row[k],str) for k in ('drawNumberURL','drawDate','drawName')):
+            raise uncertain('Express Entry link, date and name must be strings')
         if not re.fullmatch(r'\d+',str(row['drawNumber'])) or int(row['drawNumber']) in seen:
             raise uncertain('Express Entry round identity is invalid or duplicated')
         seen.add(int(row['drawNumber']))

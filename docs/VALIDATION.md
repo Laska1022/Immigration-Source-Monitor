@@ -4,7 +4,7 @@ Environment: Linux, Python 3.12.14. Tests use isolated temporary SQLite database
 
 | Check | Actual result |
 |---|---|
-| `python -m pytest -q` | **84 passed**, 0 failed, 0 skipped; current suite completed |
+| `python -m pytest -q` | **92 passed**, 0 failed, 0 skipped; current suite completed |
 | Hash-locked dependency install | Passed using `pip install --no-cache-dir --require-hashes -r requirements.txt` |
 | `python -m pip check` | Passed: no broken requirements |
 | Saved cloud install script | Re-executed successfully on resumption: hash-locked install, dependency check, all 55 tests, six-screen HTTP smoke, and external runtime initialization |
@@ -29,6 +29,12 @@ The 1,375-row IRCC table now extracts in about two seconds within unchanged limi
 Resumed the published `29a4871` checkpoint; its 59-test baseline passed. Added 25 fictional fixture tests: exact page/JSON artifacts and hashes/times, unchanged HTML with changed data, numeric/date/score/distribution and historical edits, reversions, ordering/new rounds, missing/invalid fields, endpoint changes, failures/304s, missing historical rounds, unknown dynamic content, bounded extraction, raw ZIP download and backup round-trip. Full result: **84 passed**.
 
 At 2026-10-29T12:27:02+00:00 this task's reviewed managed proxy returned CONNECT 403 for the Express Entry fetch prerequisite. Current runtime observations report enforced restricted access with no custom official hosts. This differs from the previous task's unrestricted runtime. The previous successful live-source report is retained unchanged; no new live adapter success is claimed. No environment settings were changed. The adapter's strict field assumptions must be checked against actual current data when access is available.
+
+## Confirmed bug fixes
+
+Eight targeted regression cases cover five defects/behaviors: a guide replacement alert swallowed by prior candidate insertion; an in-flight old check overwriting freshly edited source settings/health on success or failure; request-start times incorrectly used for completed observations; queued sources still fetched after being paused; and repeated failures in the first five articles starving later discoveries. The guide test also verifies reversions, deduplication, approval gating, legacy immutable metadata and visible link excerpts. See [BUG_AUDIT](BUG_AUDIT.md).
+
+Before the fixes, four of the initial five reproductions failed; the separate starvation reproduction also failed. After fixes, all **92 tests pass**, with no skips/failures. `python scripts/smoke-local.py` passes the fictional CLI demo, six actual HTTP screens, CSP/content checks, attachment and cleanup. `compileall` and `git diff --check` passed. These tests do not establish live adapter or Windows/SMTP acceptance.
 
 ## Deterministic acceptance coverage
 

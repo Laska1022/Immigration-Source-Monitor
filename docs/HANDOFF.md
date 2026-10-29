@@ -1,32 +1,38 @@
 # Handoff
 
-**Status: READY** — publishing agent verifies remote SHA after push; release acceptance remains incomplete.
-Continuation: **codex/immigration-monitor**. This checkpoint resumes verified remote `29a48711d538d0e7898fd48c5514c66bdab73b27`; local checkout was behind and fast-forwarded before edits. No PR/merge or environment configuration changes.
+**Status: READY** — publication is verified against the remote SHA after push. This means the checkpoint is available to another account, not that release acceptance is complete.
 
-## Current milestone and actual implementation
+Continuation branch: **codex/immigration-monitor**. Current checkpoint is the latest commit containing this file. Resumed remote `29a48711d538d0e7898fd48c5514c66bdab73b27` by fast-forward; the adapter milestone `ff55c96495dc9d5aa26a2a11fd436a044d4606e0` is already verified on GitHub. No PR/merge or environment configuration changes.
 
-P06 Express Entry adapter is implemented and fixture-tested; live validation is pending. `express_entry.py` captures only the official page and previously observed `/content/dam/ircc/documents/json/ee_rounds_123_en.json` reference. Both are fetched unconditionally, archived as exact bytes with a manifest (URLs/times/headers/hashes), and validated by the bounded worker before comparing static text and stable round records. Partial captures never replace the baseline. Missing history, malformed/partial data, changed endpoints, 304-only responses, and unknown dynamic placeholders remain uncertain. Distribution keys and extra fields are retained verbatim. Raw ZIP download and backup round-trip work without database schema changes.
+## Current milestone / implementation
 
-Core app/Windows scripts remain as implemented in prior checkpoints. HTML parser stays `html-3/pdf-1/feed-1`; Express Entry has its own `express-entry-1` configuration component, so unrelated sources are not needlessly rebaselined. See README, PROJECT_SPEC, LIVE_SOURCE_NOTES and LIMITATIONS.
+P06 Express Entry adapter is implemented; live acceptance remains pending. `express_entry.py` validates the exact page reference to the previously observed `https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json`. Each check retrieves both full responses, archives exact bytes with individual URLs/times/headers/hashes, then validates and compares static text and stable round records in the bounded worker. Failures preserve partial evidence and the previous baseline. Changed/missing endpoints, malformed fields, incomplete/latest distribution data, disappearing historical rounds, and 304-only observations are uncertain. Raw ZIP download and backup work without a schema change. No browser renderer is added.
 
-## Checks and runtime discrepancy
+P08 bug regression audit is complete. `monitor.py` now prevents stale in-flight checks from overwriting edited sources, refreshes paused/removed queued sources, records completion timestamps separately from request starts, emits/deduplicates/reverses guide replacement events from consecutive observations, and rotates pending article capture fairly across restarts. Source modifications and saved historical versions are preserved. `tests/test_regressions.py` and `docs/BUG_AUDIT.md` record reproductions/fixes. Comparison UI shows old/new guide links. All guide monitoring remains approval-gated.
+
+Core app/Windows scripts are retained. HTML parser is `html-3/pdf-1/feed-1`; Express Entry adds its own `express-entry-1` configuration component. Unrelated sources do not need rebaselining for the adapter. A small `article_capture_cursor` setting persists queue fairness; no database schema migration is required.
+
+## Verified results and limitations
 
 - Baseline after fast-forward: **59 passed**.
-- Adapter tests: **25 passed**; full suite **84 passed**, no skipped/failed tests. Includes data-only changes, dates/counts/scores/distribution/history/reversions, reordered/new rounds, partial/invalid/changed-reference failures, archive hashes, ZIP download, bounded worker and restore.
-- Previous published live evidence remains **8/9 successes**, Express Entry uncertain, on the earlier unrestricted instance (09:50 UTC). Both requested BC guide links were discovered but not approved/checked. Do not repeat that completed research.
-- **This task's runtime differs**: current observations report restricted enforced access with no custom official hosts. A robots-respecting probe at **2026-10-29T12:27:02+00:00** returned managed-proxy CONNECT 403. No new live adapter success was obtained. The earlier source-verification report is preserved unchanged.
-- Windows, real SMTP, graphical browser tests remain unrun. No settings were changed/published, respecting the user's previously recorded preference.
+- Adapter checkpoint: **25 new adapter cases**, 84 total passing.
+- Final suite: **92 passed**, no failures/skips, including eight targeted bug-regression cases. Four initial cases and the separate starvation reproduction failed before fixes. `python -m pytest -q` completed successfully.
+- `python scripts/smoke-local.py`: passed fictional demo, six real loopback HTTP pages, expected content/CSP, attachment download and cleanup. `compileall` and `git diff --check` passed.
+- Prior published live evidence is retained: **8/9 successful captures**, Express Entry uncertain, on the earlier unrestricted instance (2026-10-29 09:50 UTC). The official JSON endpoint had 454 records; both requested guide links were discovered but not approved/checked. Do not repeat that research or treat it as this adapter's live acceptance.
+- This task's runtime differs: current enforced policy is restricted with no custom official hosts. A robots-respecting Express Entry probe at **2026-10-29T12:27:02+00:00** failed with managed-proxy CONNECT **403 Forbidden**. No new live adapter success was obtained. The previous source-verification files were preserved unchanged.
+- Windows setup/scheduler/DPAPI, real SMTP and graphical browser testing remain unrun. No environment settings were changed or published, respecting the user's recorded preference.
 
-## Next steps
+## Exact next steps
 
-1. Finish P08 bug regression audit: inspect source editing during a fetch and guide replacement discovery/event ordering. Reproduce before fixing; add targeted tests. These are independent of blocked live access.
-2. Run full tests and real local smoke after changes; update docs and publish another checkpoint.
-3. When a runtime with the user's intended public access is attached, inspect environment_status and run `ISM_TRUSTED_PROXY=1 python -m immigration_monitor verify-sources --output docs/source-verification.json`. Do not change/publish environment settings without the user's instruction. Validate the new adapter against actual page declarations and data types/field completeness; its strict assumptions are currently fixture-tested only. Do not weaken validation solely to make a test pass.
-4. Ask for approval inside the app before monitoring the two actual BC Skills Immigration guides listed in LIVE_SOURCE_NOTES; PDF redirects/content/extraction remain unverified. Apply its three existing-source adjustments if needed; init preserves user edits.
-5. Complete Windows setup/launcher/scheduler/DPAPI/restore and optional configured SMTP acceptance. P06/P07 remain incomplete until their actual checks pass.
+1. Inspect status/remotes; fetch/verify the latest continuation tip; read AGENTS/PLAN/spec and this handoff. Install locked dependencies and run the 92-test baseline. Preserve unexpected changes and never force-push.
+2. Continue P06 in a runtime with the user's intended official-site access. Inspect current environment_status; do not infer access from the previous task or change/publish environment settings without instruction. Run `ISM_TRUSTED_PROXY=1 python -m immigration_monitor verify-sources --output docs/source-verification.json` only through the reviewed managed proxy. CLI exits 1 for any failed/uncertain source.
+3. Validate actual Express Entry page declarations and JSON types/field completeness against the strict adapter. Fixtures follow the documented field names but are not copies of the live payload. Legitimate historical variants may conservatively fail; diagnose observed evidence rather than weakening checks to obtain green results. Compare consecutive live captures and data-only changes where verifiable. Keep exact artifacts and no-change/failure separation.
+4. Ask for approval inside the app before monitoring the two BC Skills Immigration guide candidates in LIVE_SOURCE_NOTES. PDF redirects/content/extraction remain unverified. Apply its three existing-source adjustments if needed; init intentionally preserves user edits.
+5. Complete Windows setup/launcher/HTTP smoke, scheduler install/remove/browser-closed checks/catch-up, DPAPI and restore. Optional real SMTP follows secure user configuration. P06/P07 remain incomplete until those actual checks support completion.
+6. Publish each meaningful unit with tests and updated plan/handoff; confirm remote SHA. No unfinished code work is intentionally left local in this checkpoint.
 
-## Reproduction and handoff rules
+## Reproduction / continuation rules
 
-Use existing checkout; no worktree. Python 3.11+; install `python -m pip install --require-hashes -r requirements.txt`. Tests: `python -m pytest -q`; actual HTTP smoke: `python scripts/smoke-local.py`. Current task uses `/workspace/ism-venv/bin/python`, which is not cross-account memory; recreate dependencies as needed. Data stays outside checkout. No secrets needed for fixture tests.
+Use the existing checkout, no worktree. Python 3.11+, `python -m pip install --require-hashes -r requirements.txt`; tests `python -m pytest -q`; local HTTP smoke `python scripts/smoke-local.py`. This task used `/workspace/ism-venv/bin/python`; recreate it rather than relying on another account's files. Runtime data, credentials, snapshots and backups remain outside checkout. Fixtures require no secrets or live network.
 
-Inspect/fetch remote at every resume and before push, preserve unrelated changes, never force-push/merge stable without approval. Confirm `git rev-parse HEAD` equals the continuation ref from `git ls-remote origin refs/heads/codex/immigration-monitor`. No unpublished work is intended after this checkpoint; if publication fails, mark NEEDS_PUBLISHING and export a Git bundle. READY means GitHub availability, not completed live/Windows acceptance.
+Verify publication with `git rev-parse HEAD` and `git ls-remote origin refs/heads/codex/immigration-monitor`. If push fails, mark NEEDS_PUBLISHING and provide a Git bundle/manual action. Do not merge into stable without approval. READY means shared GitHub checkpoint; actual long-term runtime remains the user's Windows computer.

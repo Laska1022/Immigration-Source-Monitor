@@ -65,6 +65,7 @@ DEFAULTS = {
     'smtp_host': '', 'smtp_port': 587, 'smtp_mode': 'starttls', 'smtp_user': '',
     'email_to': '', 'email_from': '',
     'network_cooldowns': {},
+    'article_capture_cursor': 0,
     'priority_rules': {'numbers': True, 'keywords': ['deadline', 'eligible', 'eligibility', 'not', 'open', 'closed', 'must', 'required']},
 }
 
