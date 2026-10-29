@@ -1,0 +1,83 @@
+[
+  {
+    "title": "IRCC Program Delivery Updates",
+    "url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/operational-bulletins-manuals/updates.html",
+    "agency": "IRCC",
+    "tags": "instructions",
+    "source_type": "announcement",
+    "scope": "listing entries",
+    "expected": "updates"
+  },
+  {
+    "title": "IRCC notices",
+    "url": "https://www.canada.ca/en/immigration-refugees-citizenship/news/notices.html",
+    "agency": "IRCC",
+    "tags": "notices",
+    "source_type": "announcement",
+    "scope": "listing entries",
+    "expected": "notices"
+  },
+  {
+    "title": "Express Entry rounds",
+    "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations.html",
+    "agency": "IRCC",
+    "tags": "Express Entry",
+    "source_type": "public guidance",
+    "scope": "main content",
+    "expected": "round"
+  },
+  {
+    "title": "IEC recognized organizations — public guidance",
+    "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/iec/recognized-organizations.html",
+    "agency": "IRCC",
+    "tags": "IEC",
+    "source_type": "public guidance",
+    "scope": "main content",
+    "expected": "recognized organizations"
+  },
+  {
+    "title": "IEC recognized organizations — operational instructions",
+    "url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/operational-bulletins-manuals/temporary-residents/foreign-workers/exemption-codes/international-experience/canadian-interests-reciprocal-employment-international-experience-canada-recognized-organizations-foreign-youth.html",
+    "agency": "IRCC",
+    "tags": "IEC",
+    "source_type": "operational instructions",
+    "scope": "main content",
+    "expected": "recognized organizations"
+  },
+  {
+    "title": "BC PNP news",
+    "url": "https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/news",
+    "agency": "British Columbia",
+    "tags": "BC PNP",
+    "source_type": "announcement",
+    "scope": "listing entries",
+    "expected": "news"
+  },
+  {
+    "title": "BC PNP invitations",
+    "url": "https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/invitations-to-apply",
+    "agency": "British Columbia",
+    "tags": "BC PNP",
+    "source_type": "public guidance",
+    "scope": "main content",
+    "expected": "invitations"
+  },
+  {
+    "title": "BC PNP documents",
+    "url": "https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/documents",
+    "agency": "British Columbia",
+    "tags": "BC PNP, guides",
+    "source_type": "document index",
+    "scope": "listing entries",
+    "expected": "documents"
+  },
+  {
+    "title": "BC PNP employer information",
+    "url": "https://www.welcomebc.ca/immigrate-to-b-c/for-employers",
+    "agency": "British Columbia",
+    "tags": "BC PNP, employers",
+    "source_type": "public guidance",
+    "scope": "main content",
+    "expected": "employer"
+  }
+]
